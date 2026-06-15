@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backend Starterkit - Interactive Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #090D16;
+      --bg-surface: rgba(17, 22, 37, 0.6);
+      --bg-sidebar: #0E1325;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-primary: #F3F4F6;
+      --text-secondary: #9CA3AF;
+      --accent-cyan: #06B6D4;
+      --accent-violet: #8B5CF6;
+      --accent-gradient: linear-gradient(135deg, #06B6D4 0%, #8B5CF6 100%);
+      --accent-glow: rgba(6, 182, 212, 0.15);
+      --card-glow: rgba(139, 92, 246, 0.1);
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --sidebar-width: 300px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-dark);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      padding: 2rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .brand-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 1.5rem 1rem;
+      overflow-y: auto;
+    }
+
+    .nav-item {
+      display: block;
+      color: var(--text-secondary);
+      text-decoration: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 3px solid transparent;
+    }
+
+    .nav-item:hover {
+      color: var(--text-primary);
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-item.active {
+      color: var(--text-primary);
+      background: rgba(6, 182, 212, 0.08);
+      border-left: 3px solid var(--accent-cyan);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    /* Main Layout */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 3rem 4rem;
+      max-width: 1200px;
+    }
+
+    /* Header & Badges */
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .header-info h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -1px;
+    }
+
+    .header-info p {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+
+    .status-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+
+    .badge.success { color: var(--success); }
+    .badge.success::before { background-color: var(--success); }
+    .badge.warning { color: var(--warning); }
+    .badge.warning::before { background-color: var(--warning); }
+
+    /* Content Sections */
+    section {
+      margin-bottom: 5rem;
+      scroll-margin-top: 2rem;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    h2::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 24px;
+      background: var(--accent-gradient);
+      border-radius: 3px;
+    }
+
+    h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.5rem;
+    }
+
+    p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1.25rem;
+      font-size: 0.975rem;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin-bottom: 1.5rem;
+      margin-left: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    strong {
+      color: var(--text-primary);
+    }
+
+    /* Cards & Grid */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(6, 182, 212, 0.3);
+      box-shadow: 0 8px 30px var(--card-glow);
+    }
+
+    .card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      margin-bottom: 0;
+    }
+
+    /* Code Blocks */
+    .code-container {
+      position: relative;
+      margin: 1.5rem 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .code-header {
+      background-color: rgba(255, 255, 255, 0.03);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    .copy-btn:hover {
+      color: var(--accent-cyan);
+    }
+
+    pre {
+      background-color: #050811;
+      padding: 1.5rem;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #38BDF8;
+    }
+
+    .inline-code {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      color: #E2E8F0;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+    }
+
+    th, td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.02);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.01);
+      color: var(--text-primary);
+    }
+
+    /* Callouts */
+    .callout {
+      background: linear-gradient(90deg, rgba(6, 182, 212, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 0 12px 12px 0;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .callout-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Swagger button link */
+    .btn-swagger {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-gradient);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+    }
+
+    .btn-swagger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.5);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+      body {
+        flex-direction: column;
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 2rem;
+      }
+      .top-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-title">NestJS Starter</div>
+      <div class="brand-subtitle">API Documentation</div>
+    </div>
+    <div class="sidebar-nav">
+      <a href="#overview" class="nav-item active">Overview & Features</a>
+      <a href="#solutions" class="nav-item">Masalah & Solusi</a>
+      <a href="#quickstart" class="nav-item">Quick Start</a>
+      <a href="#env-config" class="nav-item">Config & Environment</a>
+      <a href="#architecture" class="nav-item">Architecture</a>
+      <a href="#rbac" class="nav-item">RBAC & Hak Akses</a>
+      <a href="#adding-modules" class="nav-item">Cara Menambah Modul</a>
+      <a href="#queues" class="nav-item">Integrasi Antrean (Queues)</a>
+      <a href="#db-transactions" class="nav-item">Transaksi & Migrasi DB</a>
+      <a href="#endpoints" class="nav-item">API Endpoints</a>
+      <a href="#file-upload" class="nav-item">Strategi File Upload</a>
+      <a href="#security" class="nav-item">Security & Cache</a>
+      <a href="#errors-serialization" class="nav-item">Error & Serialisasi</a>
+      <a href="#testing" class="nav-item">Testing & Quality</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    
+    <!-- Top Header -->
+    <div class="top-header">
+      <div class="header-info">
+        <h1>Backend Starterkit</h1>
+        <p>Production-ready modular NestJS boilerplate featuring type-safety, performance, and best practices.</p>
+      </div>
+      <div class="status-group">
+        <div class="badge success">API: Online</div>
+        <div class="badge success">PostgreSQL: Online</div>
+        <div class="badge success">Redis: Online</div>
+        <div class="badge success">MinIO S3: Online</div>
+        <div class="badge success">Tests: 10/10 Passed</div>
+      </div>
+    </div>
+
+    <!-- Section: Overview -->
+    <section id="overview">
+      <h2>Overview & Features</h2>
+      <p>Starterkit ini dirancang menggunakan <strong>NestJS</strong> dan <strong>TypeScript</strong> dengan memprioritaskan keamanan (anti-DoS, proteksi CSRF), efisiensi performa (Redis caching, optimalisasi query DB), dan kepatuhan penuh terhadap standar tim.</p>
+      
+      <div class="grid-container">
+        <div class="card">
+          <h4>🔒 Keamanan Kelas Produksi</h4>
+          <p>Enkripsi Argon2id, cookie SameSite=Strict HttpOnly untuk refresh token, penanganan brute-force, dan mitigasi celah keamanan CPU DoS.</p>
+        </div>
+        <div class="card">
+          <h4>⚡ Redis-powered Caching</h4>
+          <p>Mekanisme caching validation session JWT dan user permissions di Redis untuk memangkas latency database SQL secara masif.</p>
+        </div>
+        <div class="card">
+          <h4>📁 Stateless File Storage</h4>
+          <p>Penanganan file upload ke Object Storage (S3/R2/GCS) secara streaming tanpa menulis ke lokal server disk. Dilengkapi validasi Magic Bytes.</p>
+        </div>
+        <div class="card">
+          <h4>🛠️ Arsitektur Bersih</h4>
+          <p>Struktur modular, Dependency Injection ketat, DTO validation terenkapsulasi, dan transaksional DB ($transaction) terjamin.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <div class="callout-title">💡 Swagger OpenAPI Dashboard</div>
+        <p>Untuk mencoba API secara langsung dengan visual interaktif, silakan mengakses dokumentasi Swagger.</p>
+        <a href="/api/v1/docs" class="btn-swagger">Buka Swagger UI &rarr;</a>
+      </div>
+    </section>
+
+    <!-- Section: Masalah & Solusi -->
+    <section id="solutions">
+      <h2>Masalah & Solusi yang Diselesaikan Starterkit</h2>
+      <p>Starterkit ini secara khusus menyelesaikan beberapa masalah teknis umum yang sering terjadi di tingkat produksi:</p>
+      
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h4>🔥 1. Kerentanan CPU DoS pada Verifikasi Refresh Token</h4>
+        <p><strong>Masalah:</strong> Cara lama melakukan hashing database session menarik seluruh session unrevoked dari DB ke RAM dan mengecek kecocokan Argon2 secara sekuensial dalam loop. Ini dapat membekukan event loop Node.js jika terdapat ribuan user.</p>
+        <p style="margin-top: 0.5rem;"><strong>Solusi:</strong> Refresh token kini diformat menjadi <span class="inline-code">sessionId.tokenValue</span>. Backend dapat mencari baris session secara instan menggunakan indeks kunci utama $O(1)$ di database SQL, lalu mengecek Argon2 <strong>hanya sekali</strong> pada session yang bersangkutan.</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h4>📊 2. Overhead Database SQL pada Validasi JWT</h4>
+        <p><strong>Masalah:</strong> Di setiap request ke endpoint terproteksi JWT, middleware menembak database untuk memverifikasi session aktif. Hal ini memperlambat API dan membebani server SQL.</p>
+        <p style="margin-top: 0.5rem;"><strong>Solusi:</strong> Kami mengimplementasikan Redis session caching. State keaktifan session disimpan di Redis (TTL 5 menit). Modul mutasi (seperti ganti password, logout, status update, soft-delete) akan secara otomatis membersihkan cache terkait agar session langsung ter-revoke.</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h4>🔑 3. DB Joins Berulang untuk Guard Hak Akses (RBAC)</h4>
+        <p><strong>Masalah:</strong> Setiap Guard mengecek hak akses user, backend melakukan JOIN tabel User, Role, dan Permission ke database.</p>
+        <p style="margin-top: 0.5rem;"><strong>Solusi:</strong> Izin user yang unik disimpan di Redis dengan TTL 1 jam. Saat admin memperbarui izin peran di modul roles, backend otomatis mencari user yang memegang peran tersebut dan meng-invalidasi cache izin mereka seketika.</p>
+      </div>
+
+      <div class="card" style="margin-bottom: 1.5rem;">
+        <h4>💥 4. Connection Pool Leak & Timeout</h4>
+        <p><strong>Masalah:</strong> Prisma membuat connection pool dinamis yang berujung pada error `connection pool timeout` di bawah trafik tinggi.</p>
+        <p style="margin-top: 0.5rem;"><strong>Solusi:</strong> String koneksi di-tune secara eksplisit dengan <span class="inline-code">connection_limit=10</span> dan <span class="inline-code">pool_timeout=20</span>, dipadukan dengan lifecycle cleanup NestJS <span class="inline-code">OnModuleDestroy</span> di PrismaService.</p>
+      </div>
+    </section>
+
+    <!-- Section: Quick Start -->
+    <section id="quickstart">
+      <h2>Quick Start</h2>
+      <p>Ikuti langkah berikut untuk memasang dependensi dan menyalakan server lokal development:</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>Bash / Terminal</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+        </div>
+        <pre><code># 1. Kloning dependensi pnpm
+pnpm install
+
+# 2. Setujui build dependensi untuk pnpm v10+ (jika diminta)
+pnpm approve-builds
+
+# 3. Salin environment template dan sesuaikan isinya
+cp .env.example .env
+
+# 4. Jalankan Docker Compose untuk menyalakan PostgreSQL, Redis, dan MinIO S3
+docker compose up -d
+
+# 5. Sinkronisasikan database schema dan jalankan database seeding
+pnpm db:migrate
+pnpm db:seed
+
+# 6. Jalankan aplikasi dalam mode dev (watch mode)
+pnpm start:dev</code></pre>
+      </div>
+
+      <h3>Mengubah Nama Proyek (Project Renaming)</h3>
+      <p>Untuk mengubah nama starter kit ini sesuai dengan nama proyek Anda yang baru, lakukan pembaruan pada berkas-berkas berikut:</p>
+      
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li><strong>package.json</strong>:
+          <br>Ubah properti <span class="inline-code">"name"</span> menjadi nama proyek baru Anda (contoh: <span class="inline-code">"my-awesome-api"</span>).
+        </li>
+        <li><strong>Berkas Environment (.env & .env.example)</strong>:
+          <br>Ubah nilai variabel <span class="inline-code">APP_NAME</span> (contoh: <span class="inline-code">APP_NAME="My Awesome Service"</span>) dan sesuaikan nama database di <span class="inline-code">DATABASE_URL</span>.
+        </li>
+        <li><strong>docker-compose.yml</strong>:
+          <br>Sesuaikan properti <span class="inline-code">container_name</span> (contoh: <span class="inline-code">my-project-postgres</span>) dan nama database di <span class="inline-code">POSTGRES_DB</span>.
+        </li>
+        <li><strong>CI/CD Workflow (.github/workflows/ci.yml)</strong>:
+          <br>Sesuaikan nama database pengujian pada variabel <span class="inline-code">POSTGRES_DB</span> dan <span class="inline-code">DATABASE_URL</span>.
+        </li>
+        <li><strong>Dokumentasi (src/docs/index.html)</strong>:
+          <br>Ubah judul aplikasi di elemen <span class="inline-code">brand-title</span> dan <span class="inline-code">h1</span> ke nama proyek baru Anda.
+        </li>
+      </ol>
+    </section>
+
+    <!-- Section: Config & Environment Variables -->
+    <section id="env-config">
+      <h2>Configuration & Environment Variables</h2>
+      <p>Aplikasi menggunakan <strong>fail-fast configuration validation</strong> dengan Zod. Jika variabel lingkungan di bawah tidak terisi atau salah format, aplikasi akan langsung crash saat booting disertai log yang jelas.</p>
+
+      <h3>Daftar Variabel Lingkungan (.env)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Key</th>
+            <th>Default / Validasi</th>
+            <th>Deskripsi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="inline-code">NODE_ENV</span></td>
+            <td><span class="inline-code">development | staging | production</span></td>
+            <td>Lingkungan eksekusi aplikasi</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">APP_PORT</span></td>
+            <td><span class="inline-code">4000</span> (Integer)</td>
+            <td>Port server backend</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">APP_PREFIX</span></td>
+            <td><span class="inline-code">api/v1</span></td>
+            <td>Prefix global route API</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">DATABASE_URL</span></td>
+            <td>URL postgresql (Wajib)</td>
+            <td>Koneksi database PostgreSQL (termasuk connection_limit & pool_timeout)</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">JWT_ACCESS_SECRET</span></td>
+            <td>Minimal 16 karakter</td>
+            <td>Kunci enkripsi untuk JWT Access Token</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">JWT_ACCESS_EXPIRES_IN</span></td>
+            <td><span class="inline-code">15m</span></td>
+            <td>Masa berlaku JWT Access Token</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">JWT_REFRESH_SECRET</span></td>
+            <td>Minimal 16 karakter</td>
+            <td>Kunci enkripsi untuk JWT Refresh Token</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">COOKIE_DOMAIN</span></td>
+            <td><span class="inline-code">localhost</span></td>
+            <td>Domain cookie browser untuk refresh token</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">REDIS_HOST</span></td>
+            <td><span class="inline-code">localhost</span></td>
+            <td>Host server Redis</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">S3_ENDPOINT</span></td>
+            <td>URL endpoint (opsional)</td>
+            <td>Endpoint custom Object Storage (seperti MinIO/Cloudflare R2)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section: Architecture -->
+    <section id="architecture">
+      <h2>Architecture & Guidelines</h2>
+      <p>Starterkit ini mematuhi standar arsitektur modular NestJS secara ketat:</p>
+      
+      <h3>1. Struktur Folder Modular</h3>
+      <p>Setiap fitur/domain bisnis dikelompokkan dalam satu folder modul mandiri yang berisi Controller, Service, DTO, dan Spec File secara kohesif:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Struktur Direktori</span>
+        </div>
+        <pre><code>src/
+├── cache/            # Caching global & redis config
+├── common/           # Filter, Guard, Interceptor, Pipe global
+├── config/           # Strongly-typed configuration & Zod schema validation
+├── database/         # PrismaService & database modules
+├── modules/          # Fitur Modul (Auth, Users, Roles, Upload)
+│   ├── auth/
+│   │   ├── dto/
+│   │   ├── auth.controller.ts
+│   │   └── auth.service.ts
+│   └── users/
+└── main.ts           # Bootstrapping & global middleware settings</code></pre>
+      </div>
+
+      <h3>2. Aturan Penting Developer (AI Guardrails)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Topik</th>
+            <th>Pedoman Wajib</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Environment Variables</strong></td>
+            <td>Dilarang menggunakan <span class="inline-code">process.env</span> secara langsung. Gunakan <span class="inline-code">ConfigService</span> dan validasi tipe via Zod saat startup.</td>
+          </tr>
+          <tr>
+            <td><strong>Database Mutations</strong></td>
+            <td>Gunakan Prisma <span class="inline-code">$transaction</span> untuk penulisan berganda (multi-write) yang saling berhubungan demi menjamin integritas data (ACID).</td>
+          </tr>
+          <tr>
+            <td><strong>Upload Files</strong></td>
+            <td>Selalu upload ke Object Storage secara stateless. Gunakan validasi Magic Bytes (<span class="inline-code">file-type</span>) untuk memeriksa tipe MIME asli.</td>
+          </tr>
+          <tr>
+            <td><strong>Route Parameters</strong></td>
+            <td>Wajib memvalidasi tipe parameter route menggunakan pipe validator seperti <span class="inline-code">ParseUUIDPipe</span>.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>3. Alur Detail Validasi JWT & Session Security Flow</h3>
+      <p>Setiap request ke endpoint terproteksi akan melalui alur pengecekan keamanan berikut:</p>
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li><strong>Client Request</strong> mengirimkan Access Token (JWT) di HTTP Header `Authorization: Bearer <token>`.</li>
+        <li><strong>JwtAuthGuard</strong> memotong token dan memverifikasinya secara kriptografi menggunakan kunci rahasia (`JWT_ACCESS_SECRET`).</li>
+        <li>Setelah token valid, Guard memeriksa cache Redis untuk memastikan sesi masih aktif (tidak diblokir atau di-revoke). Jika cache hit dan user berstatus `ACTIVE`, akses langsung diberikan.</li>
+        <li>Jika cache miss (data kadaluwarsa di Redis), Guard melakukan fallback query ke database PostgreSQL untuk memeriksa status sesi asli. Hasilnya kemudian disimpan kembali di Redis untuk mempercepat request berikutnya.</li>
+        <li><strong>PermissionsGuard</strong> kemudian membandingkan permissions dari perannya dengan perizinan yang dibutuhkan rute (`@Permissions()`).</li>
+      </ol>
+    </section>
+
+    <!-- Section: RBAC & Hak Akses -->
+    <section id="rbac">
+      <h2>Role-Based Access Control (RBAC) & Hak Akses</h2>
+      <p>Starterkit ini mengimplementasikan otorisasi tingkat lanjut berbasis izin (permissions) yang dikelompokkan ke dalam peran (roles). Izin user dievaluasi secara dinamis oleh <span class="inline-code">PermissionsGuard</span>.</p>
+
+      <h3>1. Matriks Peran & Hak Akses Default</h3>
+      <p>Berikut adalah pemetaan peran default dan izin yang diberikan berdasarkan seeder:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Peran (Role)</th>
+            <th>Deskripsi</th>
+            <th>Izin (Permissions) Terkait</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>super_admin</strong></td>
+            <td>Akses penuh tanpa batas ke semua fitur sistem</td>
+            <td>Semua izin (<span class="inline-code">users.*</span>, <span class="inline-code">roles.*</span>, <span class="inline-code">permissions.*</span>, <span class="inline-code">audit_logs.read</span>)</td>
+          </tr>
+          <tr>
+            <td><strong>admin</strong></td>
+            <td>Akses manajemen sistem terpadu</td>
+            <td><span class="inline-code">users.read</span>, <span class="inline-code">users.create</span>, <span class="inline-code">users.update</span>, <span class="inline-code">roles.read</span>, <span class="inline-code">permissions.read</span>, <span class="inline-code">audit_logs.read</span></td>
+          </tr>
+          <tr>
+            <td><strong>user</strong></td>
+            <td>Pengguna umum sistem</td>
+            <td><span class="inline-code">users.read</span> (Hanya dapat membaca informasi profil sendiri/publik)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>2. Penggunaan Decorator @Permissions</h3>
+      <p>Proteksi rute controller Anda dengan menyematkan decorator <span class="inline-code">@Permissions()</span> bersama dengan guard otorisasi:</p>
+      <div class="code-container">
+        <pre><code>@Controller('roles')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+export class RolesController {
+  @Post()
+  @Permissions('roles.create')
+  async create(@Body() dto: CreateRoleDto) {
+    // Hanya user yang memiliki izin 'roles.create' yang dapat mengakses
+  }
+}</code></pre>
+      </div>
+
+      <h3>3. Cara Menambah Permission Baru ke dalam Sistem</h3>
+      <p>Jika Anda menambah fitur baru yang memerlukan hak akses spesifik, ikuti langkah berikut:</p>
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li>Buka file <span class="inline-code">prisma/seed.ts</span>.</li>
+        <li>Tambahkan permission baru Anda (contoh: <span class="inline-code">products.delete</span>) ke dalam array <span class="inline-code">basePermissions</span>.</li>
+        <li>Petakan permission baru tersebut ke dalam peran (role) yang sesuai di objek <span class="inline-code">roles</span>.</li>
+        <li>Jalankan perintah seeder untuk menyinkronkan data database:</li>
+      </ol>
+      <div class="code-container">
+        <pre><code>pnpm run db:seed</code></pre>
+      </div>
+    </section>
+
+    <!-- Section: Cara Menambah Modul Baru -->
+    <section id="adding-modules">
+      <h2>Cara Menambah Modul Baru</h2>
+      <p>Gunakan langkah-langkah terstruktur berikut saat menambahkan fitur atau domain bisnis baru ke dalam starter kit:</p>
+      
+      <h3>Langkah 1: Definisikan Schema Database</h3>
+      <p>Buka berkas <span class="inline-code">prisma/schema.prisma</span>, buat model baru dengan relasi yang dibutuhkan, serta tambahkan indeks pada kolom filter:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>prisma/schema.prisma</span>
+        </div>
+        <pre><code>model Product {
+  id          String   @id @default(uuid())
+  name        String
+  price       Float
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft-delete column
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@map("products")
+}</code></pre>
+      </div>
+      <p>Jalankan migrasi untuk memperbarui skema di database lokal Anda:</p>
+      <div class="code-container">
+        <pre><code>npx prisma migrate dev --name create_products_table</code></pre>
+      </div>
+
+      <h3>Langkah 2: Generate Modul Menggunakan Nest CLI</h3>
+      <p>Gunakan NestJS generator CLI untuk membuat berkas modul secara rapi:</p>
+      <div class="code-container">
+        <pre><code>npx nest g module modules/products
+npx nest g controller modules/products --no-spec
+npx nest g service modules/products</code></pre>
+      </div>
+
+      <h3>Langkah 3: Tulis DTO & Lakukan Validasi Input</h3>
+      <p>Buat DTO di dalam folder <span class="inline-code">modules/products/dto</span> menggunakan validator decorator:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/products/dto/create-product.dto.ts</span>
+        </div>
+        <pre><code>import { IsString, IsNumber, MinLength, IsPositive } from 'class-validator';
+
+export class CreateProductDto {
+  @IsString()
+  @MinLength(3)
+  name: string;
+
+  @IsNumber()
+  @IsPositive()
+  price: number;
+}</code></pre>
+      </div>
+
+      <h3>Langkah 4: Tulis Logika Bisnis & Proteksi Route</h3>
+      <p>Implementasikan endpoint di Controller dengan proteksi Guard JWT, otorisasi izin spesifik, dan validasi kepemilikan data (anti-IDOR):</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/products/products.controller.ts</span>
+        </div>
+        <pre><code>import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PermissionsGuard } from '../../common/guards/permissions.guard';
+import { Permissions } from '../../common/decorators/permissions.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { CreateProductDto } from './dto/create-product.dto';
+import { ProductsService } from './products.service';
+
+@Controller('products')
+@UseGuards(JwtAuthGuard, PermissionsGuard)
+export class ProductsController {
+  constructor(private readonly productsService: ProductsService) {}
+
+  @Post()
+  @Permissions('products.create')
+  async create(
+    @CurrentUser() user: any,
+    @Body() dto: CreateProductDto
+  ) {
+    return this.productsService.create(user.id, dto);
+  }
+}</code></pre>
+      </div>
+
+      <h3>Langkah 5: Tulis Unit Test</h3>
+      <p>Buat berkas <span class="inline-code">*.spec.ts</span> pendamping untuk menguji logika bisnis secara terisolasi dengan mem-mock PrismaService:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/products/products.service.spec.ts</span>
+        </div>
+        <pre><code>import { Test, TestingModule } from '@nestjs/testing';
+import { ProductsService } from './products.service';
+import { PrismaService } from '../../database/prisma.service';
+
+describe('ProductsService', () => {
+  let service: ProductsService;
+  let prisma: any;
+
+  beforeEach(async () => {
+    prisma = {
+      product: { create: jest.fn() }
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        ProductsService,
+        { provide: PrismaService, useValue: prisma }
+      ],
+    }).compile();
+
+    service = module.get<ProductsService>(ProductsService);
+  });
+
+  it('should create product successfully', async () => {
+    prisma.product.create.mockResolvedValue({ id: 'prod-1', name: 'Mug' });
+    const res = await service.create('usr-1', { name: 'Mug', price: 10000 });
+    expect(res.id).toBe('prod-1');
+  });
+});</code></pre>
+      </div>
+    </section>
+
+    <!-- Section: Integrasi Antrean (Queues - BullMQ) -->
+    <section id="queues">
+      <h2>Integrasi Antrean & Pekerjaan Latar Belakang (BullMQ)</h2>
+      <p>Starterkit telah mengonfigurasi BullMQ secara global untuk mengorkestrasi pekerjaan asinkronus (background jobs) yang memakan waktu lama, seperti pengiriman email atau konversi media.</p>
+
+      <h3>1. Mendaftarkan Antrean di Fitur Modul</h3>
+      <p>Mendaftarkan antrean baru bernama <span class="inline-code">notifications</span> ke dalam modul Anda:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/notification/notification.module.ts</span>
+        </div>
+        <pre><code>import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
+import { NotificationService } from './notification.service';
+import { NotificationProcessor } from './notification.processor';
+
+@Module({
+  imports: [
+    BullModule.registerQueue({
+      name: 'notifications',
+    }),
+  ],
+  providers: [NotificationService, NotificationProcessor],
+  exports: [NotificationService],
+})
+export class NotificationModule {}</code></pre>
+      </div>
+
+      <h3>2. Memproduksi Pekerjaan (Producer)</h3>
+      <p>Suntikkan antrean ke dalam service Anda untuk menambahkan pekerjaan asinkronus baru:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/notification/notification.service.ts</span>
+        </div>
+        <pre><code>import { Injectable } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
+
+@Injectable()
+export class NotificationService {
+  constructor(
+    @InjectQueue('notifications') private readonly notificationQueue: Queue,
+  ) {}
+
+  async sendWelcomeEmail(userId: string, email: string) {
+    // Menambahkan job asinkronus ke Redis
+    await this.notificationQueue.add('sendWelcome', {
+      userId,
+      email,
+    }, {
+      attempts: 3, // Coba ulang maksimal 3 kali jika gagal
+      backoff: {
+        type: 'exponential',
+        delay: 5000, // Eksponensial delay mulai dari 5 detik
+      }
+    });
+  }
+}</code></pre>
+      </div>
+
+      <h3>3. Memproses Pekerjaan (Processor)</h3>
+      <p>Buat class processor untuk mengonsumsi pekerjaan secara asinkronus di latar belakang:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>modules/notification/notification.processor.ts</span>
+        </div>
+        <pre><code>import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
+
+@Processor('notifications')
+export class NotificationProcessor extends WorkerHost {
+  private readonly logger = new Logger(NotificationProcessor.name);
+
+  async process(job: Job<any, any, string>): Promise<any> {
+    switch (job.name) {
+      case 'sendWelcome':
+        this.logger.log(`Memproses welcome email untuk user ID: ${job.data.userId}`);
+        // Logika pengiriman email menggunakan SMTP / Mailgun / AWS SES
+        break;
+      default:
+        this.logger.warn(`Job tidak terdaftar: ${job.name}`);
+    }
+  }
+}</code></pre>
+      </div>
+
+      <h3>4. Otorisasi & Monitoring Bull Board</h3>
+      <p>Dashboard Bull Board dapat diakses pada endpoint <span class="inline-code">/queues</span>. Untuk melindunginya dari akses publik di produksi, kami menggunakan middleware <span class="inline-code">QueuesAuthMiddleware</span>:</p>
+      <ul>
+        <li>Middleware ini memverifikasi JWT access token pengguna secara langsung dari cookies atau authorization header.</li>
+        <li>Hanya pengguna dengan role <span class="inline-code">super_admin</span> yang diizinkan untuk melihat dan mengelola antrean (seperti melakukan restart job yang gagal).</li>
+      </ul>
+    </section>
+
+    <!-- Section: Transaksi & Migrasi DB -->
+    <section id="db-transactions">
+      <h2>Transaksi Database & Zero-Downtime Migrations</h2>
+      <p>Bagian ini membahas integritas transaksi database tingkat lanjut dan penanganan migrasi skema yang aman di lingkungan produksi.</p>
+
+      <h3>1. Menggunakan Transaksi Database (ACID)</h3>
+      <p>Setiap mutasi database yang saling berkaitan wajib dibungkus dalam transaksi untuk menghindari inkonsistensi data:</p>
+      
+      <div class="grid-container">
+        <div class="card">
+          <h4>🔗 Transaksi Sekuensial (Sequential Transaction)</h4>
+          <p>Digunakan bila kueri berikutnya membutuhkan data hasil keluaran kueri sebelumnya:</p>
+          <div class="code-container" style="margin-top:1rem;">
+            <pre><code>await prisma.$transaction(async (tx) => {
+  const user = await tx.user.create({ data: { ... } });
+  await tx.profile.create({ data: { userId: user.id } });
+});</code></pre>
+          </div>
+        </div>
+        <div class="card">
+          <h4>⚡ Transaksi Paralel (Parallel Transaction)</h4>
+          <p>Digunakan bila kueri tidak saling bergantung, mengeksekusi array operasi sekaligus:</p>
+          <div class="code-container" style="margin-top:1rem;">
+            <pre><code>await prisma.$transaction([
+  prisma.user.update({ ... }),
+  prisma.session.updateMany({ ... })
+]);</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3>2. Panduan Zero-Downtime Migrations (Expand and Contract)</h3>
+      <p>Untuk mencegah kegagalan runtime saat rilis bertahap (Rolling Update / Blue-Green), dilarang melakukan migrasi *breaking-changes* secara langsung. Terapkan pola 3-fase:</p>
+      
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li><strong>Fase 1: Expand (Penyediaan Kolom Baru)</strong>:
+          <ul>
+            <li>Tambahkan kolom baru di <span class="inline-code">schema.prisma</span> (wajib bersifat opsional / *nullable*).</li>
+            <li>Jalankan kueri dual-write di kode aplikasi (menulis data ke kolom lama dan baru secara bersamaan). Rilis kode ini ke produksi.</li>
+          </ul>
+        </li>
+        <li><strong>Fase 2: Transition (Migrasi Data Historis)</strong>:
+          <ul>
+            <li>Jalankan skrip latar belakang untuk menyalin data dari kolom lama ke kolom baru.</li>
+            <li>Ubah kueri pembacaan kode aplikasi agar mengambil data hanya dari kolom baru. Rilis kode ini.</li>
+          </ul>
+        </li>
+        <li><strong>Fase 3: Contract (Pembersihan & Penghapusan)</strong>:
+          <ul>
+            <li>Hapus kolom lama dari berkas skema dan jalankan migrasi untuk men-drop kolom lama di DB.</li>
+            <li>Hapus logika dual-write dari kode aplikasi. Rilis kode final ini.</li>
+          </ul>
+        </li>
+      </ol>
+    </section>
+
+    <!-- Section: Endpoints -->
+    <section id="endpoints">
+      <h2>API Endpoints</h2>
+      <p>Berikut adalah daftar endpoint API penting yang telah diimplementasikan dalam versi v1:</p>
+
+      <h3>Authentication (/api/v1/auth)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Deskripsi</th>
+            <th>Headers / Cookie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:#10B981">POST</strong></td>
+            <td><span class="inline-code">/register</span></td>
+            <td>Pendaftaran user baru & melampirkan session cookie</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#10B981">POST</strong></td>
+            <td><span class="inline-code">/login</span></td>
+            <td>Login user & set access + refresh token cookies</td>
+            <td>None</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#10B981">POST</strong></td>
+            <td><span class="inline-code">/refresh</span></td>
+            <td>Memperbarui JWT Access Token (Masa berlaku 15 menit)</td>
+            <td>Cookie: <span class="inline-code">refresh_token</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#10B981">POST</strong></td>
+            <td><span class="inline-code">/logout</span></td>
+            <td>Logout user & membersihkan token di cookie + Redis</td>
+            <td>Bearer JWT</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Users Management (/api/v1/users)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Deskripsi</th>
+            <th>Kebutuhan Otorisasi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong style="color:#3B82F6">GET</strong></td>
+            <td><span class="inline-code">/me</span></td>
+            <td>Mengambil profil pribadi user aktif</td>
+            <td>Bearer JWT</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#F59E0B">PATCH</strong></td>
+            <td><span class="inline-code">/me/password</span></td>
+            <td>Mengubah password user & merusak semua session lama</td>
+            <td>Bearer JWT</td>
+          </tr>
+          <tr>
+            <td><strong style="color:#3B82F6">GET</strong></td>
+            <td><span class="inline-code">/</span></td>
+            <td>Mencantumkan list semua user (terpaginasi)</td>
+            <td>Izin: <span class="inline-code">users.read</span></td>
+          </tr>
+          <tr>
+            <td><strong style="color:#EF4444">DELETE</strong></td>
+            <td><span class="inline-code">/:id</span></td>
+            <td>Soft-delete user (tidak menghapus fisik dari DB)</td>
+            <td>Izin: <span class="inline-code">users.delete</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section: Strategi File Upload -->
+    <section id="file-upload">
+      <h2>Strategi File Upload Aman</h2>
+      <p>Starterkit menerapkan mekanisme upload stateless langsung ke Object Storage S3 untuk menjamin skalabilitas horizontal dan keamanan berkas.</p>
+
+      <h3>1. Validasi Magic Bytes (File Signature)</h3>
+      <p>Jangan pernah mempercayai tipe MIME yang dideklarasikan oleh header HTTP klien karena mudah dipalsukan. Backend membaca data biner awal berkas (*magic bytes*) untuk mendeteksi tipe file sesungguhnya:</p>
+      <div class="code-container">
+        <pre><code>// Dynamic import dari library 'file-type'
+const { fileTypeFromBuffer } = await import('file-type');
+const fileType = await fileTypeFromBuffer(fileBuffer);
+
+if (!allowedMimeTypes.includes(fileType.mime)) {
+  throw new BadRequestException('MIME type tidak sah!');
+}</code></pre>
+      </div>
+
+      <h3>2. Keamanan Akses Berkas dengan Pre-signed URLs</h3>
+      <p>Berkas privat (seperti dokumen KTP, slip pembayaran, berkas medis) tidak boleh diakses secara langsung tanpa autentikasi. Gunakan token presigned URL dengan masa kedaluwarsa singkat:</p>
+      <div class="code-container">
+        <pre><code>import { GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+const command = new GetObjectCommand({
+  Bucket: 'my-bucket',
+  Key: 'uploads/private-file.pdf',
+});
+
+// Menghasilkan URL yang berlaku terbatas selama 60 menit
+const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });</code></pre>
+      </div>
+
+      <h3>3. Validasi Ukuran & Tipe Berkas via Pipes</h3>
+      <p>Untuk membatasi ukuran file dan format biner secara aman di controller endpoint, gunakan kombinasi <span class="inline-code">ParseFilePipe</span>:</p>
+      <div class="code-container">
+        <pre><code>@Post('upload')
+@UseInterceptors(FileInterceptor('file'))
+async uploadFile(
+  @UploadedFile(
+    new ParseFilePipe({
+      validators: [
+        new MaxFileSizeValidator({ maxSize: 1024 * 1024 * 5 }), // Max 5MB
+        new FileTypeValidator({ fileType: 'image/(jpeg|png)' }),
+      ],
+    }),
+  )
+  file: Express.Multer.File,
+) {
+  return this.uploadService.uploadFile(file.buffer, file.originalname, file.mimetype);
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section: Security -->
+    <section id="security">
+      <h2>Security, Rate Limiting & Caching</h2>
+      <p>Proyek ini mengimplementasikan mitigasi celah keamanan performa tingkat lanjut:</p>
+      
+      <div class="callout">
+        <div class="callout-title">⚡ Mitigasi CPU DoS (O(1) Refresh Token)</div>
+        <p>Dengan memformat refresh token menjadi <span class="inline-code">sessionId.tokenRandomBytes</span>, backend melakukan lookup berbasis indexed primary key terlebih dahulu secara langsung. Operasi hash Argon2 yang berat hanya dieksekusi <strong>satu kali</strong> pada session yang ditemukan, mencegah eksploitasi beban CPU.</p>
+      </div>
+
+      <h3>1. Rate Limiting (Throttling)</h3>
+      <p>ThrottlerModule terdaftar secara global membatasi request maksimal sebanyak <strong>100 request dalam 1 menit</strong>. Anda dapat mengabaikan atau menimpa batasan ini di level controller/route tertentu:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Kustomisasi Throttler</span>
+        </div>
+        <pre><code>import { Throttle, SkipThrottle } from '@nestjs/throttler';
+
+// Mengabaikan rate limiting untuk seluruh rute di Controller ini
+@SkipThrottle()
+@Controller('public')
+export class PublicController {}
+
+// Menimpa limit (maksimal 5 request per 10 detik) untuk rute login
+@Throttle({ default: { limit: 5, ttl: 10000 } })
+@Post('login')
+async login() {}</code></pre>
+      </div>
+
+      <h3>2. Mekanisme Caching Redis</h3>
+      <p>Data berikut disimpan di cache Redis guna menghindari overhead query database SQL di setiap request:</p>
+      <ul>
+        <li><strong>Validasi Session User</strong>: Disimpan pada key <span class="inline-code">session:{sessionId}:user</span> (TTL 5 menit). Di-invalidasi instan saat logout, ganti password, perubahan status user, dan penghapusan akun.</li>
+        <li><strong>Izin User (Permissions)</strong>: Disimpan pada key <span class="inline-code">user:{userId}:permissions</span> (TTL 1 jam). Di-invalidasi instan saat admin mengubah hak akses peran di panel roles.</li>
+      </ul>
+
+      <h3>3. Praktek Pembersihan Cache (Cache Invalidation Flow)</h3>
+      <p>Untuk menjamin konsistensi data saat ada mutasi (perubahan data), ikuti alur *Cache Invalidation* berikut:</p>
+      <div class="code-container">
+        <pre><code>// 1. Lakukan update data di database
+await this.prisma.user.update({
+  where: { id: userId },
+  data: { status: 'DELETED' }
+});
+
+// 2. Hapus cache terkait agar user ter-logout seketika
+await Promise.all([
+  this.cacheService.del(CacheKeys.sessionUser(sessionId)),
+  this.cacheService.del(CacheKeys.userPermissions(userId))
+]);</code></pre>
+      </div>
+    </section>
+
+    <!-- Section: Error & Serialisasi -->
+    <section id="errors-serialization">
+      <h2>Standardisasi Error & Serialisasi Output</h2>
+      <p>Mekanisme penyeragaman respons JSON di seluruh sistem sangat penting untuk konsistensi integrasi dengan aplikasi frontend/klien.</p>
+
+      <h3>1. Format Error Terstandarisasi</h3>
+      <p>Semua exception yang ditangkap di filter global akan diubah menjadi format standar:</p>
+      <div class="code-container">
+        <pre><code>{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "BAD_REQUEST",
+    "message": "Nama minimal terdiri dari 3 karakter",
+    "details": { ... } // Berisi detail validasi class-validator (jika ada)
+  }
+}</code></pre>
+      </div>
+
+      <h3>2. Pemetaan Kode Error Domain</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Status HTTP</th>
+            <th>Kode Error Domain</th>
+            <th>Keterangan Kasus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>400 Bad Request</strong></td>
+            <td><span class="inline-code">BAD_REQUEST</span></td>
+            <td>Kegagalan validasi payload input atau format kueri</td>
+          </tr>
+          <tr>
+            <td><strong>401 Unauthorized</strong></td>
+            <td><span class="inline-code">UNAUTHORIZED</span></td>
+            <td>Token kedaluwarsa, tidak ada token, atau session tidak valid</td>
+          </tr>
+          <tr>
+            <td><strong>403 Forbidden</strong></td>
+            <td><span class="inline-code">FORBIDDEN</span></td>
+            <td>User tidak memiliki izin RBAC untuk mengakses rute terkait</td>
+          </tr>
+          <tr>
+            <td><strong>404 Not Found</strong></td>
+            <td><span class="inline-code">NOT_FOUND</span></td>
+            <td>Entitas database atau rute endpoint tidak ditemukan</td>
+          </tr>
+          <tr>
+            <td><strong>409 Conflict</strong></td>
+            <td><span class="inline-code">CONFLICT</span></td>
+            <td>Duplikasi data unik (misal: email ganda) atau data bentrok</td>
+          </tr>
+          <tr>
+            <td><strong>429 Too Many Requests</strong></td>
+            <td><span class="inline-code">RATE_LIMITED</span></td>
+            <td>Permintaan melebihi batas throttler limit</td>
+          </tr>
+          <tr>
+            <td><strong>500 Internal Error</strong></td>
+            <td><span class="inline-code">INTERNAL_SERVER_ERROR</span></td>
+            <td>Error tidak ditangani (Stack trace disembunyikan di production)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>3. Serialisasi Data Sensitif</h3>
+      <p>Jangan pernah melempar password hash ke luar secara tidak sengaja. Tandai field sensitif pada Class DTO atau Entity Anda dengan decorator `@Exclude()` dari class-transformer:</p>
+      <div class="code-container">
+        <pre><code>import { Exclude } from 'class-transformer';
+
+export class UserEntity {
+  id: string;
+  name: string;
+  email: string;
+
+  @Exclude() // Otomatis disensor oleh ClassSerializerInterceptor
+  passwordHash: string;
+}</code></pre>
+      </div>
+    </section>
+
+    <!-- Section: Testing -->
+    <section id="testing">
+      <h2>Testing, Linting & Observability</h2>
+      <p>Menulis tes otomatis dan menjaga format kode adalah kewajiban dasar untuk menjaga stabilitas starter kit.</p>
+
+      <h3>1. Testing Commands</h3>
+      <div class="grid-container">
+        <div class="card">
+          <h4>🧪 Unit Testing</h4>
+          <p>Meningkatkan keandalan fungsi di <span class="inline-code">AuthService</span>, <span class="inline-code">UsersService</span>, dan <span class="inline-code">UploadService</span> secara terisolasi tanpa efek samping database asli.</p>
+          <div class="code-container" style="margin-top: 1rem;">
+            <pre style="padding: 0.75rem;"><code>npm run test</code></pre>
+          </div>
+        </div>
+        <div class="card">
+          <h4>🚀 End-to-End (E2E) Testing</h4>
+          <p>Pengujian integrasi alur HTTP request penuh menggunakan database sandbox untuk memastikan keutuhan response data.</p>
+          <div class="code-container" style="margin-top: 1rem;">
+            <pre style="padding: 0.75rem;"><code>npm run test:e2e</code></pre>
+          </div>
+        </div>
+      </div>
+
+      <h3>2. Linting & Formatting</h3>
+      <p>Selalu bersihkan dan format kode Anda sebelum melakukan git commit atau membuat pull request:</p>
+      <div class="code-container">
+        <pre><code># Memeriksa dan memperbaiki linting otomatis (ESLint)
+npm run lint
+
+# Memformat pemformatan kode (Prettier)
+npm run format</code></pre>
+      </div>
+
+      <h3>3. Observability & Health Check</h3>
+      <p>Untuk menunjang liveness/readiness probe (Kubernetes/Docker), gunakan rute berikut:</p>
+      <ul>
+        <li><strong>Health Check Endpoint</strong>: <span class="inline-code">GET /health</span> (Memantau kesehatan PostgreSQL, konsumsi RAM heap memory, dan sisa kapasitas penyimpanan disk).</li>
+        <li><strong>Correlation / Request ID</strong>: Setiap HTTP response melampirkan header <span class="inline-code">x-request-id</span> yang di-generate baru secara dinamis per request untuk memudahkan pelacakan log secara terpusat di sisi production server.</li>
+      </ul>
+    </section>
+
+  </div>
+
+  <script>
+    // Copy button functionality
+    function copyCode(btn) {
+      const pre = btn.parentElement.nextElementSibling;
+      const code = pre.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.innerText = 'Copied!';
+        setTimeout(() => {
+          btn.innerText = 'Copy';
+        }, 2000);
+      });
+    }
+
+    // Dynamic Navigation Highlighting on Scroll
+    const sections = document.querySelectorAll('section');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(section => {
+        const sectionTop = section.offsetTop;
+        const sectionHeight = section.clientHeight;
+        if (pageYOffset >= (sectionTop - 200)) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      navItems.forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('href').substring(1) === current) {
+          item.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

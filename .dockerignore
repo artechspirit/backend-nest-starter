@@ -1,0 +1,13 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+.git
+.github
+.vscode
+README.md
+task.md
+walkthrough.md
+implementation_plan.md
+docker-compose.yml
