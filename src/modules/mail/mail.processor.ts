@@ -8,7 +8,7 @@ import { join } from 'path';
 interface MailJobData {
   to: string;
   subject: string;
-  templateName: 'email-verification' | 'password-reset';
+  templateName: 'email-verification' | 'password-reset' | 'notification';
   context: Record<string, string>;
 }
 

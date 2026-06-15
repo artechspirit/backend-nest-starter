@@ -31,6 +31,8 @@ import { RegisterDto } from './dto/register.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleOauthGuard } from './guards/google-oauth.guard';
+import { GithubOauthGuard } from './guards/github-oauth.guard';
 import { Audit } from '../../common/decorators/audit.decorator';
 
 @ApiTags('Authentication')
@@ -89,6 +91,58 @@ export class AuthController {
         accessToken: result.accessToken,
       },
     };
+  }
+
+  @Get('oauth/google')
+  @UseGuards(GoogleOauthGuard)
+  @ApiOperation({ summary: 'Initiate Google OAuth2 authentication' })
+  async googleAuth() {
+    // Handled by Passport
+  }
+
+  @Get('oauth/google/callback')
+  @UseGuards(GoogleOauthGuard)
+  @ApiOperation({ summary: 'Google OAuth2 callback' })
+  @Audit({ action: 'USER_OAUTH_LOGIN_GOOGLE', entityType: 'User' })
+  async googleAuthRedirect(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.oauthLogin(req.user, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    const webUrl = this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
+    res.redirect(`${webUrl}/oauth/callback?token=${result.accessToken}`);
+  }
+
+  @Get('oauth/github')
+  @UseGuards(GithubOauthGuard)
+  @ApiOperation({ summary: 'Initiate GitHub OAuth authentication' })
+  async githubAuth() {
+    // Handled by Passport
+  }
+
+  @Get('oauth/github/callback')
+  @UseGuards(GithubOauthGuard)
+  @ApiOperation({ summary: 'GitHub OAuth callback' })
+  @Audit({ action: 'USER_OAUTH_LOGIN_GITHUB', entityType: 'User' })
+  async githubAuthRedirect(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.oauthLogin(req.user, {
+      ipAddress: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+
+    this.setAuthCookies(res, result.accessToken, result.refreshToken);
+
+    const webUrl = this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
+    res.redirect(`${webUrl}/oauth/callback?token=${result.accessToken}`);
   }
 
   @HttpCode(HttpStatus.OK)

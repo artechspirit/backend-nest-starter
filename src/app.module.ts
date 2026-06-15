@@ -20,9 +20,18 @@ import { s3Config } from './config/s3.config';
 import { mailConfig } from './config/mail.config';
 import { CachingModule } from './cache/caching.module';
 import { BullModule } from '@nestjs/bullmq';
+import { oauthConfig } from './config/oauth.config';
+import { billingConfig } from './config/billing.config';
+import { fcmConfig } from './config/fcm.config';
 import { UploadModule } from './modules/upload/upload.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { WebhooksModule } from './modules/webhooks/webhooks.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { NotificationModule } from './modules/notifications/notification.module';
+import { ApiKeysModule } from './modules/api-keys/api-keys.module';
+import { FileJobsModule } from './modules/file-jobs/file-jobs.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { QueuesModule } from './modules/queues/queues.module';
@@ -40,6 +49,9 @@ import { QueuesModule } from './modules/queues/queues.module';
         redisConfig,
         s3Config,
         mailConfig,
+        oauthConfig,
+        billingConfig,
+        fcmConfig,
       ],
       validate: (config) => envSchema.parse(config),
     }),
@@ -103,6 +115,12 @@ import { QueuesModule } from './modules/queues/queues.module';
     UploadModule,
     AuditLogModule,
     QueuesModule,
+    EventEmitterModule.forRoot(),
+    WebhooksModule,
+    BillingModule,
+    NotificationModule,
+    ApiKeysModule,
+    FileJobsModule,
   ],
   controllers: [AppController],
   providers: [

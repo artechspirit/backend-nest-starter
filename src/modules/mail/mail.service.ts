@@ -62,7 +62,7 @@ export class MailService {
   async queueMail(
     to: string,
     subject: string,
-    templateName: 'email-verification' | 'password-reset',
+    templateName: 'email-verification' | 'password-reset' | 'notification',
     context: Record<string, string>,
   ): Promise<void> {
     try {

@@ -229,6 +229,110 @@ export class AuthService {
     return this.sanitizeUser(user);
   }
 
+  async oauthLogin(
+    profile: {
+      provider: string;
+      providerId: string;
+      email: string;
+      name: string;
+      avatarUrl?: string;
+    },
+    meta: RequestMeta,
+  ) {
+    const email = profile.email.toLowerCase().trim();
+
+    // 1. Check if OAuth account mapping exists
+    const oauthAccount = await this.prisma.userOAuth.findUnique({
+      where: {
+        provider_providerId: {
+          provider: profile.provider,
+          providerId: profile.providerId,
+        },
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    let user = oauthAccount?.user;
+
+    if (!user) {
+      // 2. Check if a user with the same email exists
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser) {
+        user = existingUser;
+      } else {
+        // 3. Create a new user with active status
+        const dummyPassword = randomBytes(32).toString('hex');
+        const passwordHash = await argon2.hash(dummyPassword);
+
+        user = await this.prisma.$transaction(async (tx) => {
+          const createdUser = await tx.user.create({
+            data: {
+              name: profile.name,
+              email,
+              passwordHash,
+              avatarUrl: profile.avatarUrl,
+              emailVerifiedAt: new Date(),
+              status: 'ACTIVE',
+            },
+          });
+
+          const defaultRole = await tx.role.findUnique({
+            where: { name: 'user' },
+          });
+
+          if (defaultRole) {
+            await tx.userRole.create({
+              data: {
+                userId: createdUser.id,
+                roleId: defaultRole.id,
+              },
+            });
+          }
+
+          return createdUser;
+        });
+      }
+
+      // 4. Create the UserOAuth link
+      await this.prisma.userOAuth.create({
+        data: {
+          userId: user.id,
+          provider: profile.provider,
+          providerId: profile.providerId,
+        },
+      });
+    }
+
+    if (user.status !== 'ACTIVE' || user.deletedAt) {
+      throw new UnauthorizedException('User is suspended or deleted');
+    }
+
+    // 5. Create session & tokens
+    const sessionResult = await this.createSession(user.id, meta);
+
+    const accessToken = await this.generateAccessToken({
+      sub: user.id,
+      email: user.email,
+      sessionId: sessionResult.session.id,
+    });
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    return {
+      user: this.sanitizeUser(user),
+      accessToken,
+      refreshToken: sessionResult.refreshToken,
+    };
+  }
+
   private async createSession(userId: string, meta: RequestMeta) {
     const sessionId = randomUUID();
     const tokenValue = randomBytes(64).toString('hex');

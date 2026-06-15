@@ -53,6 +53,30 @@ export const envSchema = z.object({
     z.string().optional(),
   ),
   MAIL_FROM: z.string().default('Backend Starterkit <noreply@example.com>'),
+
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_CALLBACK_URL: z.string().optional(),
+
+  // GitHub OAuth
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
+  GITHUB_CALLBACK_URL: z.string().optional(),
+
+  // Stripe
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+
+  // Midtrans
+  MIDTRANS_SERVER_KEY: z.string().optional(),
+  MIDTRANS_CLIENT_KEY: z.string().optional(),
+  MIDTRANS_IS_PRODUCTION: z.coerce.boolean().default(false),
+
+  // FCM (Firebase Cloud Messaging)
+  FCM_PROJECT_ID: z.string().optional(),
+  FCM_PRIVATE_KEY: z.string().optional(),
+  FCM_CLIENT_EMAIL: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
