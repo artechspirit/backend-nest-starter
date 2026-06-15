@@ -29,6 +29,10 @@ Dokumen ini berisi standar arsitektur, validasi data, sistem keamanan, penangana
 19. Untuk operasi yang tidak boleh duplikat (pembayaran, dll) — implementasikan **Idempotency Key**.
 20. **WAJIB** memvalidasi tipe parameter route (`@Param()`) menggunakan pipe validator seperti `ParseUUIDPipe` atau `ParseIntPipe`.
 21. **DILARANG** melakukan breaking database migrations secara langsung — wajib gunakan pola **Expand and Contract** (3-phase migration).
+22. **WAJIB** menggunakan decorator `@Type(() => Number)` atau `@Type(() => Boolean)` pada properti DTO Query Param yang bersifat numeric/boolean.
+23. **DILARANG** menggunakan Multer disk storage; upload wajib menggunakan memory buffer dan langsung diunggah ke S3 via `UploadService`.
+24. **DILARANG** melakukan double-wrapping response (membungkus response secara manual di controller) karena global `ResponseInterceptor` sudah otomatis menangani standardisasi envelope data.
+25. **WAJIB** mem-mock `PrismaService` beserta seluruh service eksternal (Redis, S3, BullMQ) di dalam semua file unit test (`*.spec.ts`).
 
 ---
 
@@ -112,6 +116,7 @@ src/
     *   **Interceptor**: Gunakan untuk transformasi data response global (seperti serialisasi, response wrapper), mekanisme caching response, atau monitoring performa (logging waktu eksekusi request).
     *   **Pipe**: Gunakan **hanya** untuk validasi data masukan (DTO) dan transformasi tipe data (misal: string ke integer/UUID/boolean).
     *   **Exception Filter**: Gunakan **hanya** untuk menangkap exception tak tertangani dan menyusun payload error seragam sebelum dikirim ke klien.
+    *   **Anti-Double-Wrapping**: Controller **wajib** mengembalikan raw object atau data mentah langsung tanpa membungkusnya lagi dalam struktur envelope response standar (seperti `{ success: true, data: ... }`). Hal ini karena standardisasi format response (wrapping) sudah ditangani secara otomatis oleh `ResponseInterceptor` global. Melakukan pembungkusan manual di controller akan mengakibatkan double-wrapping.
 
 ---
 
@@ -177,6 +182,7 @@ src/
         }
         ```
 *   **Query Params Bertipe Kuat**: Untuk query parameters yang kompleks (seperti paginasi, filter), buatlah DTO khusus dan gunakan `@Query()` dikombinasikan dengan transformer (`class-transformer`) agar nilai string terkonversi menjadi tipe primitif yang benar (misal: string `'true'` menjadi boolean `true`).
+*   **Parsing Tipe Data Query Parameter**: Wajib menggunakan decorator `@Type(() => Number)` atau `@Type(() => Boolean)` dari `class-transformer` untuk properti DTO query parameter yang bertipe numeric atau boolean. Tanpa decorator ini, properti tersebut akan tetap berupa string meskipun tipe Typescript dideklarasikan sebagai `number` atau `boolean`, yang berpotensi menyebabkan bug saat pengolahan logika atau pencarian database.
 
 ---
 
@@ -374,6 +380,7 @@ src/
 *   **Mock External Resources**:
     *   Unit test wajib berjalan cepat dan sepenuhnya terisolasi.
     *   **Dilarang** membiarkan unit test menembak database asli, Redis, atau API luar. Wajib mem-mock seluruh repositori, database client, dan eksternal service menggunakan framework mocking NestJS.
+    *   **Wajib Mock Prisma dan External Services**: Setiap berkas unit test (`*.spec.ts`) **wajib** mem-mock `PrismaService` dan seluruh service eksternal yang di-inject (seperti Redis/Cache, `UploadService`/S3, BullMQ Queue/Processor, MailService). Tidak boleh ada koneksi fisik/jaringan ke database, Redis, S3, atau antrean (Queue) dalam unit test.
 
 ### B. End-to-End Testing (`.e2e-spec.ts`)
 *   **Dedicated Test Database**:
@@ -410,6 +417,7 @@ src/
 *   **Jangan Simpan di Disk Server (Stateless Upload)**:
     *   **Dilarang** menyimpan file hasil upload ke dalam disk filesystem server (misal: folder `./uploads`). File tersebut akan hilang saat kontainer di-restart atau di-scale, dan tidak bisa diakses oleh instance server lain.
     *   **Wajib** menggunakan **Object Storage** (seperti AWS S3, Google Cloud Storage, Cloudflare R2) sebagai destinasi penyimpanan permanen.
+    *   **Dilarang** menggunakan Multer disk storage (menyimpan ke disk lokal sementara). Seluruh proses upload wajib menggunakan memory storage (buffer) dan diteruskan langsung ke Object Storage (S3) menggunakan `UploadService`.
 *   **Signed URLs untuk Akses Aman**:
     *   Jangan pernah mempublikasikan file yang bersifat privat (seperti dokumen pengguna, struk pembayaran) secara langsung ke internet tanpa autentikasi.
     *   Gunakan **Pre-signed URLs** (URL yang berlaku sementara) yang dibuat oleh backend untuk memberikan akses baca terbatas waktu ke klien yang telah terautentikasi.
