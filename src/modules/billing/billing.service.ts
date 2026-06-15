@@ -79,7 +79,8 @@ export class BillingService {
       };
     } else {
       const snap = this.getMidtransSnap();
-      const orderId = `bill-${userId.substring(0, 8)}-${Date.now()}`;
+      const userIdWithoutHyphens = userId.replace(/-/g, '');
+      const orderId = `bill-${userIdWithoutHyphens}-${Date.now().toString().slice(-4)}`;
 
       // 3. Define Midtrans Snap transaction parameters
       const parameter = {
@@ -203,14 +204,18 @@ export class BillingService {
       throw new BadRequestException('Midtrans signature verification failed');
     }
 
-    // 2. Extract userId from order_id (e.g. bill-userId-timestamp)
+    // 2. Extract userId from order_id (e.g. bill-userIdWithoutHyphens-timestampSuffix)
     const orderParts = order_id.split('-');
     if (orderParts.length < 3) return;
 
-    // For demonstration, let's find the user subscription by parsing the order details
-    // If billing is set up properly, you'd track orderIds in a Transaction table.
-    // Here we query subscriptions based on customerId mapping or order prefix
-    // For this simple boilerplate, let's extract the order prefix or assume a subscription update:
+    const userIdWithoutHyphens = orderParts[1];
+    let fullUserId = '';
+
+    if (userIdWithoutHyphens.length === 32) {
+      // Reconstruct UUID format: 8-4-4-4-12
+      fullUserId = `${userIdWithoutHyphens.slice(0, 8)}-${userIdWithoutHyphens.slice(8, 12)}-${userIdWithoutHyphens.slice(12, 16)}-${userIdWithoutHyphens.slice(16, 20)}-${userIdWithoutHyphens.slice(20)}`;
+    }
+
     let isPaid = false;
 
     if (transaction_status === 'capture') {
@@ -225,16 +230,14 @@ export class BillingService {
       // Payment failed/canceled
     }
 
-    if (isPaid) {
+    if (isPaid && fullUserId) {
       // Find subscription by mapping or metadata. In Midtrans snaps, you can map via userId or standard database order
       // Let's assume order_id contains order prefix containing userId reference
       // (Normally order details are stored in DB beforehand)
       // Let's simulate:
-      const user = await this.prisma.user.findFirst({
+      const user = await this.prisma.user.findUnique({
         where: {
-          id: {
-            startsWith: orderParts[1],
-          },
+          id: fullUserId,
         },
       });
 

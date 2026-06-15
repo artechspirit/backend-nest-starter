@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { createHmac } from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
+import { validateUrl } from '../../common/utils/security.util';
 
 @Processor('webhooks')
 export class WebhookProcessor extends WorkerHost {
@@ -18,6 +19,21 @@ export class WebhookProcessor extends WorkerHost {
 
     if (!sub || !sub.isActive) {
       return;
+    }
+
+    try {
+      await validateUrl(sub.url);
+    } catch (err: any) {
+      await this.prisma.webhookDeliveryLog.create({
+        data: {
+          subscriptionId,
+          event,
+          payload: payload as any,
+          isSuccess: false,
+          errorMessage: `SSRF Blocked: ${err.message}`,
+        },
+      });
+      throw err;
     }
 
     const timestamp = new Date().toISOString();

@@ -5,6 +5,8 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateWebhookSubscriptionDto } from './dto/create-webhook-subscription.dto';
 
+import { validateUrl } from '../../common/utils/security.util';
+
 @Injectable()
 export class WebhookService {
   constructor(
@@ -13,6 +15,7 @@ export class WebhookService {
   ) {}
 
   async createSubscription(userId: string, dto: CreateWebhookSubscriptionDto) {
+    await validateUrl(dto.url);
     const secret = 'whsec_' + randomBytes(32).toString('hex');
     return this.prisma.webhookSubscription.create({
       data: {

@@ -44,7 +44,13 @@ export class UploadController {
     status: 400,
     description: 'Invalid file or limit exceeded',
   })
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // Enforce 5MB limit at middleware/parser level to protect memory
+      },
+    }),
+  )
   async uploadImage(@UploadedFile() file?: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');

@@ -153,9 +153,23 @@ export class RolesService {
       throw new ConflictException('Default role cannot be deleted');
     }
 
+    // Get user IDs with this role BEFORE deleting the role
+    const userRoles = await this.prisma.userRole.findMany({
+      where: { roleId: id },
+      select: { userId: true },
+    });
+    const userIds = userRoles.map((ur) => ur.userId);
+
     await this.prisma.role.delete({
       where: { id },
     });
+
+    // Invalidate user permissions cache for affected users
+    await Promise.all(
+      userIds.map((userId) =>
+        this.authorizationService.invalidateUserPermissions(userId),
+      ),
+    );
 
     return null;
   }

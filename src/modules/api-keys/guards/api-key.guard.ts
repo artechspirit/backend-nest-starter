@@ -39,17 +39,28 @@ export class ApiKeyGuard implements CanActivate {
     const currentMinute = Math.floor(Date.now() / 60000); // 1 minute window
     const rateLimitKey = `api_key_limit:${keyHash}:${currentMinute}`;
 
-    const requestsCount = (await this.cacheService.get<number>(rateLimitKey)) ?? 0;
+    const store = this.cacheService.store as any;
+    let requestsCount = 0;
 
-    if (requestsCount >= keyData.rateLimit) {
+    if (store.client && typeof store.client.incr === 'function') {
+      // Atomic increment in Redis
+      requestsCount = await store.client.incr(rateLimitKey);
+      if (requestsCount === 1) {
+        await store.client.expire(rateLimitKey, 60); // 60 seconds TTL
+      }
+    } else {
+      // Non-atomic fallback for in-memory store (e.g. during testing)
+      const current = (await this.cacheService.get<number>(rateLimitKey)) ?? 0;
+      requestsCount = current + 1;
+      await this.cacheService.set(rateLimitKey, requestsCount, 60 * 1000); // 60 seconds in ms
+    }
+
+    if (requestsCount > keyData.rateLimit) {
       throw new HttpException(
         'Rate limit exceeded. Too many requests on this API key.',
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
-
-    // Increment request count in Redis (60 seconds expiration TTL)
-    await this.cacheService.set(rateLimitKey, requestsCount + 1, 60);
 
     // 3. Attach metadata to the request
     request.user = {
