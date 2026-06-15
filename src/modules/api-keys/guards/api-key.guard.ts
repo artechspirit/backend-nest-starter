@@ -39,7 +39,7 @@ export class ApiKeyGuard implements CanActivate {
     const currentMinute = Math.floor(Date.now() / 60000); // 1 minute window
     const rateLimitKey = `api_key_limit:${keyHash}:${currentMinute}`;
 
-    const store = this.cacheService.store as any;
+    const store = (this.cacheService as any).store;
     let requestsCount = 0;
 
     if (store.client && typeof store.client.incr === 'function') {
