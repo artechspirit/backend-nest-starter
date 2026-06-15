@@ -469,6 +469,7 @@
       <a href="#architecture" class="nav-item">Architecture</a>
       <a href="#rbac" class="nav-item">RBAC & Hak Akses</a>
       <a href="#adding-modules" class="nav-item">Cara Menambah Modul</a>
+      <a href="#enterprise-modules" class="nav-item">Enterprise Modules</a>
       <a href="#queues" class="nav-item">Integrasi Antrean (Queues)</a>
       <a href="#db-transactions" class="nav-item">Transaksi & Migrasi DB</a>
       <a href="#endpoints" class="nav-item">API Endpoints</a>
@@ -674,6 +675,31 @@ pnpm start:dev</code></pre>
             <td><span class="inline-code">S3_ENDPOINT</span></td>
             <td>URL endpoint (opsional)</td>
             <td>Endpoint custom Object Storage (seperti MinIO/Cloudflare R2)</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">GOOGLE_CLIENT_ID</span> / <span class="inline-code">GOOGLE_CLIENT_SECRET</span></td>
+            <td>OAuth Client Credentials (opsional)</td>
+            <td>Kredensial dari Google Cloud Console untuk integrasi login Google</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">GITHUB_CLIENT_ID</span> / <span class="inline-code">GITHUB_CLIENT_SECRET</span></td>
+            <td>OAuth Client Credentials (opsional)</td>
+            <td>Kredensial dari GitHub Developer Settings untuk integrasi login GitHub</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">STRIPE_SECRET_KEY</span> / <span class="inline-code">STRIPE_WEBHOOK_SECRET</span></td>
+            <td>Stripe Keys (opsional)</td>
+            <td>Kredensial Stripe API dan webhook secret token</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">MIDTRANS_SERVER_KEY</span> / <span class="inline-code">MIDTRANS_CLIENT_KEY</span></td>
+            <td>Midtrans Keys (opsional)</td>
+            <td>Kredensial akun Midtrans Sandbox / Production</td>
+          </tr>
+          <tr>
+            <td><span class="inline-code">FCM_PROJECT_ID</span> / <span class="inline-code">FCM_PRIVATE_KEY</span></td>
+            <td>Firebase credentials (opsional)</td>
+            <td>Kredensial Service Account Firebase Cloud Messaging untuk push notification</td>
           </tr>
         </tbody>
       </table>
@@ -927,6 +953,57 @@ describe('ProductsService', () => {
   });
 });</code></pre>
       </div>
+    </section>
+
+    <!-- Section: Enterprise Modules -->
+    <section id="enterprise-modules">
+      <h2>Modul Enterprise Tambahan</h2>
+      <p>Starterkit ini menyertakan 6 modul tingkat enterprise untuk mendukung kebutuhan aplikasi skala produksi tingkat lanjut:</p>
+
+      <h3>1. OAuth2 Social Auth</h3>
+      <p>Menangani login eksternal via Google dan GitHub dengan mekanisme auto-link akun dan auto-registrasi aktif secara aman.</p>
+      <ul>
+        <li><strong>Endpoint Login</strong>: <span class="inline-code">GET /auth/oauth/google</span> dan <span class="inline-code">GET /auth/oauth/github</span></li>
+        <li><strong>Endpoint Callback</strong>: <span class="inline-code">GET /auth/oauth/google/callback</span> dan <span class="inline-code">GET /auth/oauth/github/callback</span> (mengeluarkan HttpOnly cookie & redirect ke frontend web URL)</li>
+      </ul>
+
+      <h3>2. Outbound Webhooks & Event Dispatcher</h3>
+      <p>Memungkinkan pengiriman event data sistem (seperti <span class="inline-code">user.created</span>) ke server eksternal milik klien Anda secara asinkron menggunakan BullMQ worker.</p>
+      <ul>
+        <li><strong>CRUD Subskripsi</strong>: <span class="inline-code">/webhooks/subscriptions</span></li>
+        <li><strong>Fitur Keamanan</strong>: Setiap payload webhook di-sign menggunakan HMAC SHA-256 dan dikirim dengan custom header <span class="inline-code">X-Webhook-Signature</span> untuk validasi keaslian.</li>
+        <li><strong>Observability</strong>: Riwayat pengiriman tercatat lengkap di tabel <span class="inline-code">WebhookDeliveryLog</span>.</li>
+      </ul>
+
+      <h3>3. Billing & Payments Boilerplate</h3>
+      <p>Integrasi dasar dengan **Stripe** dan **Midtrans Snap** untuk pembuatan checkout session/token pembayaran dan penanganan callback webhook pembayaran secara stateless.</p>
+      <ul>
+        <li><strong>Checkout API</strong>: <span class="inline-code">POST /billing/checkout</span></li>
+        <li><strong>Webhook Public Handlers</strong>: <span class="inline-code">POST /billing/webhooks/stripe</span> dan <span class="inline-code">POST /billing/webhooks/midtrans</span></li>
+        <li>Integrasi otomatis dengan model <span class="inline-code">Subscription</span> pengguna untuk melacak masa aktif langganan.</li>
+      </ul>
+
+      <h3>4. Multi-Channel Notification Engine</h3>
+      <p>Sistem notifikasi terpusat untuk mendistribusikan pesan via WebSocket (Socket.io) real-time, Email (nodemailer EJS template), dan Push Notification (FCM).</p>
+      <ul>
+        <li><strong>WebSocket Gateway</strong>: namespace <span class="inline-code">/notifications</span> terautentikasi JWT token.</li>
+        <li><strong>Penyimpanan Token Perangkat</strong>: <span class="inline-code">POST /notifications/devices</span></li>
+        <li><strong>CRUD Notifikasi</strong>: <span class="inline-code">GET /notifications</span> (dengan paginasi) dan <span class="inline-code">PATCH /notifications/:id/read</span></li>
+      </ul>
+
+      <h3>5. Developer API Key Management</h3>
+      <p>Sistem pengelolaan API Key bagi developer pihak ketiga yang terintegrasi dengan pengamanan hash SHA-256 (hanya ditampilkan sekali saat pembuatan) dan pembatasan request dinamis menggunakan Redis cache.</p>
+      <ul>
+        <li><strong>CRUD API Keys</strong>: <span class="inline-code">/api-keys</span></li>
+        <li><strong>API Key Guard</strong>: Menyediakan <span class="inline-code">ApiKeyGuard</span> yang memverifikasi header <span class="inline-code">X-API-Key</span>, mencocokkan scope izin, serta melakukan rate limiting dinamis berbasis Redis per API Key.</li>
+      </ul>
+
+      <h3>6. Async Excel/CSV Export</h3>
+      <p>Sistem ekspor data besar (misal: Daftar Pengguna atau Audit Log) secara asinkron. Mengirim tugas ke BullMQ worker, menyusun berkas Excel menggunakan <span class="inline-code">exceljs</span>, mengunggah ke S3, dan menotifikasi pengguna secara real-time via WebSocket saat berkas siap diunduh.</p>
+      <ul>
+        <li><strong>Trigger Export</strong>: <span class="inline-code">POST /file-jobs/export</span></li>
+        <li><strong>Status & Unduhan</strong>: <span class="inline-code">GET /file-jobs</span> dan <span class="inline-code">GET /file-jobs/:id</span> (mengembalikan link file S3 yang aman)</li>
+      </ul>
     </section>
 
     <!-- Section: Integrasi Antrean (Queues - BullMQ) -->

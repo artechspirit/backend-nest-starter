@@ -22,6 +22,13 @@ A production-ready, highly secure, and modular backend starterkit built on top o
 - **Stateless File Storage**:
   - Direct S3/MinIO Object Storage upload utilizing standard streaming.
   - Advanced Magic Bytes (file signature) validation via `file-type` to detect spoofed MIME types.
+- **Enterprise Boilerplate Modules**:
+  - **OAuth2 (Social Auth)**: Login via Google and GitHub with automatic email-based account linking.
+  - **Outbound Webhooks**: User-configurable webhook subscriptions with HMAC signature verification and delivery logs.
+  - **Billing & Payments**: Integrated Stripe and Midtrans SDKs and webhook receivers.
+  - **Notification Engine**: Stream alerts using JWT-authenticated WebSockets and FCM push notifications.
+  - **Developer API Keys**: Generate SHA-256 hashed API Keys with custom scopes and Redis rate-limiting.
+  - **Async Excel/CSV Export**: Generate large data spreadsheets in background workers and upload to S3.
 - **Observability & Health Checks**:
   - Pino Logging (`nestjs-pino`, `pino-pretty`) for high-throughput, structured logs.
   - Global `x-request-id` tracking header attached to every incoming request.
