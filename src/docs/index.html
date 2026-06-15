@@ -609,6 +609,19 @@ pnpm start:dev</code></pre>
           <br>Ubah judul aplikasi di elemen <span class="inline-code">brand-title</span> dan <span class="inline-code">h1</span> ke nama proyek baru Anda.
         </li>
       </ol>
+
+      <h3>Promosi Pengguna menjadi Super Admin</h3>
+      <p>Beberapa fitur khusus (seperti dashboard antrean BullMQ di <span class="inline-code">/queues</span>) dilindungi secara ketat dan memerlukan akun bersatus <span class="inline-code">super_admin</span>. Ikuti langkah berikut untuk mempromosikan user Anda:</p>
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li>Daftarkan akun Anda terlebih dahulu secara normal melalui endpoint registrasi (<span class="inline-code">POST /api/v1/auth/register</span>).</li>
+        <li>Buka terminal Anda di direktori root aplikasi.</li>
+        <li>Jalankan perintah CLI berikut dengan menyertakan alamat email akun yang baru didaftarkan:
+          <div class="code-container" style="margin-top:0.5rem;">
+            <pre><code>pnpm db:make-super-admin user@example.com</code></pre>
+          </div>
+        </li>
+        <li>Skrip CLI secara otomatis akan memperbarui relasi peran (role) pengguna tersebut di database PostgreSQL menjadi <span class="inline-code">super_admin</span>.</li>
+      </ol>
     </section>
 
     <!-- Section: Config & Environment Variables -->
@@ -991,6 +1004,35 @@ describe('ProductsService', () => {
         <li><strong>CRUD Notifikasi</strong>: <span class="inline-code">GET /notifications</span> (dengan paginasi) dan <span class="inline-code">PATCH /notifications/:id/read</span></li>
       </ul>
 
+      <h5>Panduan Integrasi WebSocket Klien (Frontend)</h5>
+      <p>Untuk menerima notifikasi instan secara real-time, klien harus tersambung ke namespace <span class="inline-code">notifications</span> menggunakan Socket.io Client SDK. Wajib menyertakan JWT Access Token saat jabat tangan (handshake):</p>
+      <div class="code-container" style="margin-bottom: 1.5rem;">
+        <div class="code-header">
+          <span>Integrasi JS/TS Client (Socket.io-Client)</span>
+        </div>
+        <pre><code>import { io } from 'socket.io-client';
+
+const socket = io('http://localhost:4000/notifications', {
+  auth: {
+    token: 'JWT_ACCESS_TOKEN_DI_SINI' // Mengirim token via auth handshake
+  }
+});
+
+socket.on('connect', () => {
+  console.log('Tersambung ke WebSocket server. ID:', socket.id);
+});
+
+// Mendengarkan notifikasi baru yang dikirimkan server
+socket.on('notification', (payload) => {
+  console.log('Notifikasi baru diterima:', payload);
+  // Payload berisi: id, title, content, type, metadata, createdAt
+});
+
+socket.on('connect_error', (err) => {
+  console.error('Koneksi ditolak:', err.message); // Terjadi jika token tidak valid/kadaluwarsa
+});</code></pre>
+      </div>
+
       <h3>5. Developer API Key Management</h3>
       <p>Sistem pengelolaan API Key bagi developer pihak ketiga yang terintegrasi dengan pengamanan hash SHA-256 (hanya ditampilkan sekali saat pembuatan) dan pembatasan request dinamis menggunakan Redis cache.</p>
       <ul>
@@ -1004,6 +1046,146 @@ describe('ProductsService', () => {
         <li><strong>Trigger Export</strong>: <span class="inline-code">POST /file-jobs/export</span></li>
         <li><strong>Status & Unduhan</strong>: <span class="inline-code">GET /file-jobs</span> dan <span class="inline-code">GET /file-jobs/:id</span> (mengembalikan link file S3 yang aman)</li>
       </ul>
+
+      <h3>7. Hybrid Feature Flag System</h3>
+      <p>Sistem Feature Flag (Toggle Fitur) memungkinkan developer untuk menyalakan atau mematikan fitur/endpoint tertentu secara instan tanpa perlu mendeploy ulang atau me-restart aplikasi. Sistem ini bersifat <strong>hybrid</strong>: ia membaca status ter-update dari <strong>Redis Cache</strong> (dinamis), dan jika tidak ada, akan melakukan fallback ke <strong>Environment Variables (.env)</strong> (statis).</p>
+
+      <div class="callout">
+        <div class="callout-title">💡 Mengapa Harus Hybrid? (Konsep untuk Junior)</div>
+        <p>Bila ada kegagalan sistem pada pihak ketiga (misal payment gateway Stripe down), Anda bisa mematikannya secara <strong>dinamis</strong> dalam hitungan detik melalui Redis. Ketika server pulih atau masa pemeliharaan selesai, Anda tinggal menghapus override tersebut agar sistem kembali merujuk ke konfigurasi <strong>statis</strong> di berkas <span class="inline-code">.env</span>.</p>
+      </div>
+
+      <h4>1. Alur Kerja Evaluasi Feature Flag</h4>
+      <p>Ketika client mengirim request ke rute yang dilindungi, <span class="inline-code">FeatureFlagGuard</span> akan berjalan secara otomatis dengan urutan evaluasi:</p>
+      <ol style="margin-left: 2rem; margin-bottom: 1.5rem;">
+        <li>Pengecekan pertama ke Redis dengan key: <span class="inline-code">feature_flag:&lt;nama_fitur&gt;</span>. Jika ditemukan status <span class="inline-code">true</span> atau <span class="inline-code">false</span>, status tersebut langsung digunakan.</li>
+        <li>Jika Redis down atau key tersebut kosong, sistem melakukan fallback dengan membaca konfigurasi `.env`: <span class="inline-code">FEATURE_&lt;NAMA_FITUR&gt;</span> (contoh: <span class="inline-code">FEATURE_BILLING</span>).</li>
+        <li>Jika konfigurasi di `.env` juga tidak ditemukan, status fitur akan otomatis bernilai <strong>Default to Enabled (true)</strong> agar aplikasi tidak error saat deployment kode baru.</li>
+      </ol>
+
+      <h4>2. Panduan Menulis Kode (Developer Guide)</h4>
+      <p>Untuk memproteksi endpoint, Anda cukup menggunakan decorator <span class="inline-code">@FeatureFlag('nama_fitur')</span>. Decorator ini bisa diletakkan di atas kelas Controller (melindungi seluruh endpoint di dalamnya) atau di atas method endpoint spesifik.</p>
+      
+      <div class="code-container">
+        <div class="code-header">
+          <span>Contoh Penggunaan pada Controller (NestJS)</span>
+        </div>
+        <pre><code>import { Controller, Post, Get, UseGuards } from '@nestjs/common';
+import { FeatureFlag } from '../../common/decorators/feature-flag.decorator';
+
+@Controller('billing')
+@FeatureFlag('billing') // Seluruh endpoint di controller ini bergantung pada flag 'billing'
+export class BillingController {
+  
+  @Get('history')
+  async getHistory() {
+    return { data: 'Riwayat transaksi' };
+  }
+
+  @Post('checkout')
+  @FeatureFlag('stripe_checkout') // Endpoint spesifik ini dilindungi oleh sub-flag 'stripe_checkout'
+  async checkout() {
+    return { url: 'https://checkout.stripe.com/...' };
+  }
+}</code></pre>
+      </div>
+
+      <h4>3. Tutorial Aktivasi & Deaktivasi Feature Flag</h4>
+      <p>Berikut adalah langkah-langkah konkret untuk mengubah status fitur:</p>
+
+      <div class="grid-container">
+        <div class="card">
+          <h4>📁 Cara 1: Menggunakan File Konfigurasi Statis (.env)</h4>
+          <p>Gunakan cara ini jika Anda ingin menetapkan status default fitur untuk lingkungan tertentu (seperti development atau staging):</p>
+          <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li>Buka file <span class="inline-code">.env</span> di root direktori proyek Anda.</li>
+            <li>Tambahkan atau ubah status fitur dengan format <span class="inline-code">FEATURE_&lt;NAMA_FITUR&gt;=true|false</span>.
+              <br>Contoh menonaktifkan fitur billing:
+              <div class="code-container" style="margin-top:0.5rem; margin-bottom: 0.5rem;">
+                <pre><code>FEATURE_BILLING=false
+FEATURE_STRIPE_CHECKOUT=true</code></pre>
+              </div>
+            </li>
+            <li><strong>Restart server NestJS</strong> Anda agar perubahan konfigurasi dimuat kembali ke memori:
+              <div class="code-container" style="margin-top:0.5rem;">
+                <pre><code>pnpm run start:dev</code></pre>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <div class="card">
+          <h4>⚡ Cara 2: Menggunakan Overrides Dinamis Real-Time (Redis)</h4>
+          <p>Gunakan cara ini jika Anda membutuhkan perubahan instan pada server produksi tanpa perlu men-deploy ulang atau me-restart aplikasi:</p>
+          <ol style="margin-left: 1.5rem; margin-top: 0.5rem;">
+            <li>Hubungkan ke server Redis Anda. Jika menggunakan Docker Compose lokal:
+              <div class="code-container" style="margin-top:0.5rem; margin-bottom: 0.5rem;">
+                <pre><code>docker exec -it backend-redis redis-cli</code></pre>
+              </div>
+            </li>
+            <li><strong>Untuk Menonaktifkan Fitur secara Instan:</strong>
+              <br>Jalankan perintah Redis <span class="inline-code">SET</span> dengan key format <span class="inline-code">feature_flag:&lt;nama_fitur&gt;</span>:
+              <div class="code-container" style="margin-top:0.5rem; margin-bottom: 0.5rem;">
+                <pre><code>SET feature_flag:billing false</code></pre>
+              </div>
+            </li>
+            <li><strong>Untuk Mengaktifkan Kembali Fitur:</strong>
+              <div class="code-container" style="margin-top:0.5rem; margin-bottom: 0.5rem;">
+                <pre><code>SET feature_flag:billing true</code></pre>
+              </div>
+            </li>
+            <li><strong>Untuk Menghapus Override Dinamis (Kembali Merujuk ke .env):</strong>
+              <div class="code-container" style="margin-top:0.5rem;">
+                <pre><code>DEL feature_flag:billing</code></pre>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <h4>4. Cara Melakukan Verifikasi & Pengujian Fitur</h4>
+      <p>Bila suatu fitur dinonaktifkan, setiap request ke endpoint tersebut akan ditolak oleh global guard dan mengembalikan error standardisasi HTTP 403:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>Response JSON saat Fitur Nonaktif (HTTP 403 Forbidden)</span>
+        </div>
+        <pre><code>{
+  "success": false,
+  "data": null,
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Feature 'billing' is currently disabled.",
+    "details": null
+  }
+}</code></pre>
+      </div>
+
+      <h3>8. System Auditing & Interceptor (@Audit)</h3>
+      <p>Starterkit menyediakan sistem logging audit otomatis untuk mencatat aksi-aksi penting (seperti manipulasi data peran, pembaruan status pengguna, dll.) ke database. Sistem ini berjalan secara asinkron di latar belakang menggunakan <span class="inline-code">AuditInterceptor</span> sehingga tidak memblokir respon HTTP klien.</p>
+
+      <h5>Panduan Developer: Cara Menggunakan Decorator @Audit</h5>
+      <p>Developer cukup menyematkan decorator <span class="inline-code">@Audit()</span> di atas method handler rute di Controller Anda. Decorator menerima parameter opsi berupa objek <span class="inline-code">AuditOptions</span> atau string nama aksi langsung:</p>
+      
+      <div class="code-container" style="margin-bottom: 1.5rem;">
+        <div class="code-header">
+          <span>Contoh Logging Audit di Controller (NestJS)</span>
+        </div>
+        <pre><code>import { Controller, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import { Audit } from '../../common/decorators/audit.decorator';
+
+@Controller('users')
+export class UsersController {
+
+  @Patch(':id/status')
+  @Audit({ action: 'update_user_status', entityType: 'user' }) // Mencatat aksi ke AuditLog
+  async updateStatus(@Param('id') id: string, @Body() dto: UpdateStatusDto) {
+    return this.usersService.updateStatus(id, dto.status);
+  }
+}</code></pre>
+      </div>
+
+      <h5>Fitur Keamanan: Sensor Kredensial Sensitif</h5>
+      <p>Untuk mematuhi standar keamanan, <span class="inline-code">AuditInterceptor</span> secara otomatis menyensor kolom-kolom sensitif (seperti <span class="inline-code">password</span>, <span class="inline-code">newPassword</span>, dan <span class="inline-code">currentPassword</span>) dari body request sebelum menyimpannya ke kolom JSON metadata di database.</p>
     </section>
 
     <!-- Section: Integrasi Antrean (Queues - BullMQ) -->
@@ -1464,7 +1646,14 @@ npm run format</code></pre>
       <h3>3. Observability & Health Check</h3>
       <p>Untuk menunjang liveness/readiness probe (Kubernetes/Docker), gunakan rute berikut:</p>
       <ul>
-        <li><strong>Health Check Endpoint</strong>: <span class="inline-code">GET /health</span> (Memantau kesehatan PostgreSQL, konsumsi RAM heap memory, dan sisa kapasitas penyimpanan disk).</li>
+        <li><strong>Health Check Endpoint</strong>: <span class="inline-code">GET /health</span>
+          <br>Menggunakan NestJS Terminus untuk memantau kesehatan server dengan indikator spesifik:
+          <ul style="margin-left: 1.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem;">
+            <li><strong>PostgreSQL Database</strong>: Melakukan kueri ping <span class="inline-code">SELECT 1</span> untuk menjamin database aktif dan merespon.</li>
+            <li><strong>RAM Memory Heap</strong>: Memastikan penggunaan memori heap proses Node.js tidak melebihi batas <strong>150MB</strong> (melindungi dari kebocoran memori).</li>
+            <li><strong>Storage Disk Space</strong>: Memeriksa kapasitas penyimpanan partisi root (<span class="inline-code">/</span>), mengembalikan alarm/kegagalan jika penyimpanan terpakai melebihi <strong>90%</strong> (threshold: 0.9).</li>
+          </ul>
+        </li>
         <li><strong>Correlation / Request ID</strong>: Setiap HTTP response melampirkan header <span class="inline-code">x-request-id</span> yang di-generate baru secara dinamis per request untuk memudahkan pelacakan log secara terpusat di sisi production server.</li>
       </ul>
     </section>
