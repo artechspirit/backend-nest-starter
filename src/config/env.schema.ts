@@ -77,6 +77,6 @@ export const envSchema = z.object({
   FCM_PROJECT_ID: z.string().optional(),
   FCM_PRIVATE_KEY: z.string().optional(),
   FCM_CLIENT_EMAIL: z.string().optional(),
-});
+}).passthrough();
 
 export type Env = z.infer<typeof envSchema>;

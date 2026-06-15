@@ -34,6 +34,7 @@ import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { FileJobsModule } from './modules/file-jobs/file-jobs.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { FeatureFlagGuard } from './common/guards/feature-flag.guard';
 import { QueuesModule } from './modules/queues/queues.module';
 
 @Module({
@@ -128,6 +129,10 @@ import { QueuesModule } from './modules/queues/queues.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: FeatureFlagGuard,
     },
     {
       provide: APP_INTERCEPTOR,

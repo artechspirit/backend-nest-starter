@@ -29,6 +29,7 @@ A production-ready, highly secure, and modular backend starterkit built on top o
   - **Notification Engine**: Stream alerts using JWT-authenticated WebSockets and FCM push notifications.
   - **Developer API Keys**: Generate SHA-256 hashed API Keys with custom scopes and Redis rate-limiting.
   - **Async Excel/CSV Export**: Generate large data spreadsheets in background workers and upload to S3.
+  - **Hybrid Feature Flags**: Dynamic runtime overrides via Redis and static fallback via `.env` using `@FeatureFlag` and global `FeatureFlagGuard`.
 - **Observability & Health Checks**:
   - Pino Logging (`nestjs-pino`, `pino-pretty`) for high-throughput, structured logs.
   - Global `x-request-id` tracking header attached to every incoming request.
@@ -149,6 +150,13 @@ Export large database records to spreadsheets in a memory-safe background worker
 - **Trigger Export**: `POST /api/v1/file-jobs/export`
 - **Download**: `/api/v1/file-jobs/:id` (returns S3 pre-signed read URL)
 - **Worker**: Compiles spreadsheets using `exceljs` via BullMQ, uploads directly to S3, and triggers WebSocket alerts upon completion.
+
+### 7. Hybrid Feature Flag System
+Control the availability of endpoints or entire controllers at runtime.
+- **Usage**: Decorate any controller class or individual route handler with `@FeatureFlag('feature_name')`.
+- **Static Configuration**: Define `FEATURE_<FEATURE_NAME>=true` or `FEATURE_<FEATURE_NAME>=false` in your `.env` file.
+- **Dynamic Overrides**: Set a key in Redis (`feature_flag:<name>` as `true` or `false`) to dynamically toggle features in real-time without restarts.
+- **Resilience**: Gracefully falls back to `.env` variables if Redis is offline. If undefined in both, defaults to `true` (enabled).
 
 ---
 
