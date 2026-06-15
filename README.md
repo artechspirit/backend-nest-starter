@@ -109,6 +109,49 @@ pnpm run test:e2e
 
 ---
 
+## 📦 Enterprise Modules Details
+
+This starterkit comes packed with production-ready enterprise modules:
+
+### 1. OAuth2 Social Auth
+Provides seamless Google and GitHub authentication out of the box.
+- **Google Initiator**: `GET /api/v1/auth/oauth/google`
+- **GitHub Initiator**: `GET /api/v1/auth/oauth/github`
+- **Behavior**: Auto-links social accounts sharing the same email to local users, or auto-registers a new active user if they don't exist.
+
+### 2. Outbound Webhooks & Event Dispatcher
+Deliver system event payloads (e.g. `user.created`) to external client URLs.
+- **Subscription CRUD**: `/api/v1/webhooks/subscriptions`
+- **Security**: Computes and includes an HMAC SHA-256 signature in the `X-Webhook-Signature` header.
+- **Worker**: Processes HTTP POST requests via BullMQ with automatic exponential backoff retry and records logs to `WebhookDeliveryLog`.
+
+### 3. Billing & Payments Boilerplate
+Handle subscriptions and checkouts using Stripe and Midtrans.
+- **Checkout API**: `POST /api/v1/billing/checkout`
+- **Webhooks Receivers**: `POST /api/v1/billing/webhooks/stripe` & `POST /api/v1/billing/webhooks/midtrans`
+- **Behavior**: Automatically processes payment events to manage user membership status.
+
+### 4. Multi-Channel Notification Engine
+Manage and dispatch notifications across three channels: WebSockets, Email, and Push notifications.
+- **JWT-Authenticated WebSockets**: Connect using namespace `/notifications`.
+- **Register Device**: `POST /api/v1/notifications/devices`
+- **List / Read**: `GET /api/v1/notifications` & `PATCH /api/v1/notifications/:id/read`
+- **Processor**: Asynchronously queues email sends (nodemailer + HTML templates) and logs FCM push triggers.
+
+### 5. Developer API Key Management
+Issue and control developer access tokens with strict Redis-based rate limiting.
+- **API Key CRUD**: `/api/v1/api-keys`
+- **Authentication**: Using `ApiKeyGuard` enforcing `X-API-Key` headers.
+- **Security**: API Keys are cryptographically secure and saved in the database using SHA-256 hashes.
+
+### 6. Async Excel/CSV Export
+Export large database records to spreadsheets in a memory-safe background worker.
+- **Trigger Export**: `POST /api/v1/file-jobs/export`
+- **Download**: `/api/v1/file-jobs/:id` (returns S3 pre-signed read URL)
+- **Worker**: Compiles spreadsheets using `exceljs` via BullMQ, uploads directly to S3, and triggers WebSocket alerts upon completion.
+
+---
+
 ## 📘 Interactive API Documentation
 
 - **Swagger UI**: Access interactive Swagger documentation at `http://localhost:4000/api/v1/docs`.
