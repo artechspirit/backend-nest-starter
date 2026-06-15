@@ -46,7 +46,9 @@ export class NotificationGateway
       const roomName = `user_${decoded.sub}`;
       await socket.join(roomName);
 
-      this.logger.debug(`Client connected to WebSocket: user ${decoded.sub} (Socket ${socket.id})`);
+      this.logger.debug(
+        `Client connected to WebSocket: user ${decoded.sub} (Socket ${socket.id})`,
+      );
     } catch (err) {
       this.logger.warn(`WebSocket connection unauthorized: ${err}`);
       socket.disconnect();

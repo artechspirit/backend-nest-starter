@@ -10,7 +10,9 @@ export class WebhookProcessor extends WorkerHost {
     super();
   }
 
-  async process(job: Job<{ subscriptionId: string; event: string; payload: any }>): Promise<any> {
+  async process(
+    job: Job<{ subscriptionId: string; event: string; payload: any }>,
+  ): Promise<any> {
     const { subscriptionId, event, payload } = job.data;
 
     const sub = await this.prisma.webhookSubscription.findUnique({
@@ -28,7 +30,7 @@ export class WebhookProcessor extends WorkerHost {
         data: {
           subscriptionId,
           event,
-          payload: payload as any,
+          payload: payload,
           isSuccess: false,
           errorMessage: `SSRF Blocked: ${err.message}`,
         },
@@ -74,7 +76,7 @@ export class WebhookProcessor extends WorkerHost {
 
       responseStatus = response.status;
       responseBody = await response.text();
-      
+
       if (response.ok) {
         isSuccess = true;
       } else {
@@ -86,15 +88,15 @@ export class WebhookProcessor extends WorkerHost {
       const durationMs = Date.now() - startTime;
 
       // Limit response body size stored in DB
-      const trimmedResponseBody = responseBody 
-        ? responseBody.substring(0, 1000) 
+      const trimmedResponseBody = responseBody
+        ? responseBody.substring(0, 1000)
         : null;
 
       await this.prisma.webhookDeliveryLog.create({
         data: {
           subscriptionId,
           event,
-          payload: payload as any,
+          payload: payload,
           responseStatus,
           responseBody: trimmedResponseBody,
           durationMs,

@@ -23,7 +23,8 @@
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "db:make-super-admin": "tsx prisma/make-super-admin.ts"
+    "db:make-super-admin": "tsx prisma/make-super-admin.ts",
+    "setup:dev": "node scripts/setup-dev.js"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

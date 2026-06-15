@@ -41,7 +41,8 @@ export class FileJobProcessor extends WorkerHost {
 
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `${fileJob.module}_export_${timestamp}.xlsx`;
-      const mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const mimeType =
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
       // 2. Fetch data based on module
       if (fileJob.module === 'users') {
@@ -128,7 +129,7 @@ export class FileJobProcessor extends WorkerHost {
       this.logger.debug(`File job ${jobId} completed successfully`);
     } catch (err: any) {
       this.logger.error(`File job ${jobId} failed: ${err.message}`, err.stack);
-      
+
       await this.prisma.fileJob.update({
         where: { id: jobId },
         data: {

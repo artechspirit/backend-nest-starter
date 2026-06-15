@@ -10,7 +10,7 @@ export class AppController {
     const prodPath = join(__dirname, '..', 'docs', 'index.html');
     const devPath = join(__dirname, 'docs', 'index.html');
     const docsPath = existsSync(prodPath) ? prodPath : devPath;
-    
+
     return res.sendFile(docsPath);
   }
 }

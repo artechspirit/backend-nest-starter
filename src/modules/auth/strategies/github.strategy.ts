@@ -6,9 +6,14 @@ import { Strategy, Profile } from 'passport-github2';
 @Injectable()
 export class GithubStrategy extends PassportStrategy(Strategy, 'github') {
   constructor(configService: ConfigService) {
-    const clientID = configService.get<string>('oauth.github.clientId') || 'dummy-client-id';
-    const clientSecret = configService.get<string>('oauth.github.clientSecret') || 'dummy-client-secret';
-    const callbackURL = configService.get<string>('oauth.github.callbackUrl') || 'http://localhost:4000/api/v1/auth/oauth/github/callback';
+    const clientID =
+      configService.get<string>('oauth.github.clientId') || 'dummy-client-id';
+    const clientSecret =
+      configService.get<string>('oauth.github.clientSecret') ||
+      'dummy-client-secret';
+    const callbackURL =
+      configService.get<string>('oauth.github.callbackUrl') ||
+      'http://localhost:4000/api/v1/auth/oauth/github/callback';
 
     super({
       clientID,

@@ -55,7 +55,9 @@ export class NotificationProcessor extends WorkerHost {
           });
 
           if (devices.length === 0) {
-            this.logger.debug(`No device registered for user ${user.id}, skipping push`);
+            this.logger.debug(
+              `No device registered for user ${user.id}, skipping push`,
+            );
             continue;
           }
 

@@ -50,7 +50,9 @@ export async function validateUrl(urlStr: string): Promise<void> {
   const isIp = /^[0-9a-f.:]+$/i.test(hostname);
   if (isIp) {
     if (isPrivateIp(hostname)) {
-      throw new BadRequestException('Requests to private or local IP addresses are forbidden');
+      throw new BadRequestException(
+        'Requests to private or local IP addresses are forbidden',
+      );
     }
     return;
   }
@@ -59,7 +61,9 @@ export async function validateUrl(urlStr: string): Promise<void> {
   try {
     const { address } = await dnsLookup(hostname);
     if (isPrivateIp(address)) {
-      throw new BadRequestException('Requests to private or local IP addresses are forbidden');
+      throw new BadRequestException(
+        'Requests to private or local IP addresses are forbidden',
+      );
     }
   } catch (err) {
     throw new BadRequestException(`Failed to resolve host: ${hostname}`);

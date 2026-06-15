@@ -6,9 +6,14 @@ import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(configService: ConfigService) {
-    const clientID = configService.get<string>('oauth.google.clientId') || 'dummy-client-id';
-    const clientSecret = configService.get<string>('oauth.google.clientSecret') || 'dummy-client-secret';
-    const callbackURL = configService.get<string>('oauth.google.callbackUrl') || 'http://localhost:4000/api/v1/auth/oauth/google/callback';
+    const clientID =
+      configService.get<string>('oauth.google.clientId') || 'dummy-client-id';
+    const clientSecret =
+      configService.get<string>('oauth.google.clientSecret') ||
+      'dummy-client-secret';
+    const callbackURL =
+      configService.get<string>('oauth.google.callbackUrl') ||
+      'http://localhost:4000/api/v1/auth/oauth/google/callback';
 
     super({
       clientID,
@@ -29,7 +34,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       provider: 'google',
       providerId: id,
       email: emails?.[0]?.value,
-      name: name ? `${name.givenName || ''} ${name.familyName || ''}`.trim() : emails?.[0]?.value?.split('@')[0],
+      name: name
+        ? `${name.givenName || ''} ${name.familyName || ''}`.trim()
+        : emails?.[0]?.value?.split('@')[0],
       avatarUrl: photos?.[0]?.value,
     };
     done(null, user);

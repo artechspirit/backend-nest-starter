@@ -9,8 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, CurrentUser as CurrentUserType } from '../../common/decorators/current-user.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiKeyService } from './api-key.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
@@ -24,7 +32,10 @@ export class ApiKeyController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new developer API key' })
-  @ApiResponse({ status: 201, description: 'API key successfully generated (displayed only once)' })
+  @ApiResponse({
+    status: 201,
+    description: 'API key successfully generated (displayed only once)',
+  })
   async create(
     @Body() dto: CreateApiKeyDto,
     @CurrentUser() user: CurrentUserType,
@@ -43,10 +54,7 @@ export class ApiKeyController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Revoke / delete an API key' })
   @ApiResponse({ status: 200, description: 'API Key revoked successfully' })
-  async remove(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserType,
-  ) {
+  async remove(@Param('id') id: string, @CurrentUser() user: CurrentUserType) {
     return this.apiKeyService.deleteKey(user.id, id);
   }
 }

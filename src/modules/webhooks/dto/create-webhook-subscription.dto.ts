@@ -1,4 +1,10 @@
-import { IsUrl, IsString, IsArray, IsNotEmpty, ArrayMinSize } from 'class-validator';
+import {
+  IsUrl,
+  IsString,
+  IsArray,
+  IsNotEmpty,
+  ArrayMinSize,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateWebhookSubscriptionDto {

@@ -23,6 +23,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     super({
+      // Dual-extraction method to maximize usability:
+      // 1. Attempts to extract bearer token from standard Authorization header (great for API testing / Mobile clients)
+      // 2. Falls back to extracting from 'access_token' cookie (HttpOnly cookie flow, ideal for secure SPA clients)
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
         (request: Request) => {
@@ -36,12 +39,17 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  /**
+   * The validate() method is executed automatically after Passport verifies the JWT signature.
+   * Whatever object this returns is attached to the Express request object as `req.user`.
+   */
   async validate(payload: JwtPayload): Promise<{
     id: string;
     email: string;
     name: string | null;
     sessionId: string;
   }> {
+    // 1. Try to fetch the session from Redis cache to avoid heavy DB roundtrips on every request.
     const cacheKey = CacheKeys.sessionUser(payload.sessionId);
     const cachedUser = await this.cacheService.get<{
       id: string;
@@ -54,6 +62,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       return cachedUser;
     }
 
+    // 2. Cache miss: Verify the session status in PostgreSQL.
+    // Check if the session is revoked, expired, or belongs to another user.
     const session = await this.prisma.session.findFirst({
       where: {
         id: payload.sessionId,
@@ -68,10 +78,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       },
     });
 
+    // 3. Block access if session/user is invalid or user was soft-deleted
     if (!session || !session.user || session.user.deletedAt) {
       throw new UnauthorizedException('Invalid session');
     }
 
+    // 4. Ensure the user's status is still ACTIVE
     if (session.user.status !== 'ACTIVE') {
       throw new UnauthorizedException('User is not active');
     }
@@ -83,7 +95,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       sessionId: session.id,
     };
 
-    // Cache session user details for 5 minutes (300 seconds)
+    // 5. Cache the verified session payload for 5 minutes (300 seconds) for subsequent requests
     await this.cacheService.set(cacheKey, userPayload, 300);
 
     return userPayload;

@@ -96,7 +96,9 @@ export class NotificationService {
     }
 
     // 3. Dispatch to BullMQ for asynchronous Email and FCM Push Notifications
-    const asyncChannels = data.channels.filter((c) => c === 'email' || c === 'push');
+    const asyncChannels = data.channels.filter(
+      (c) => c === 'email' || c === 'push',
+    );
     if (asyncChannels.length > 0) {
       await this.notificationQueue.add('send-notification', {
         notificationId: notification.id,

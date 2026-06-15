@@ -9,8 +9,16 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CurrentUser, CurrentUser as CurrentUserType } from '../../common/decorators/current-user.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateWebhookSubscriptionDto } from './dto/create-webhook-subscription.dto';
 import { WebhookService } from './webhook.service';
@@ -24,7 +32,10 @@ export class WebhookSubscriptionController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new webhook subscription' })
-  @ApiResponse({ status: 201, description: 'Webhook subscription successfully created' })
+  @ApiResponse({
+    status: 201,
+    description: 'Webhook subscription successfully created',
+  })
   async create(
     @Body() dto: CreateWebhookSubscriptionDto,
     @CurrentUser() user: CurrentUserType,
@@ -33,7 +44,9 @@ export class WebhookSubscriptionController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all webhook subscriptions for the authenticated user' })
+  @ApiOperation({
+    summary: 'List all webhook subscriptions for the authenticated user',
+  })
   @ApiResponse({ status: 200, description: 'List of subscriptions retrieved' })
   async findAll(@CurrentUser() user: CurrentUserType) {
     return this.webhookService.listSubscriptions(user.id);
@@ -43,10 +56,7 @@ export class WebhookSubscriptionController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Delete a webhook subscription' })
   @ApiResponse({ status: 200, description: 'Subscription deleted' })
-  async remove(
-    @Param('id') id: string,
-    @CurrentUser() user: CurrentUserType,
-  ) {
+  async remove(@Param('id') id: string, @CurrentUser() user: CurrentUserType) {
     return this.webhookService.deleteSubscription(user.id, id);
   }
 }

@@ -76,7 +76,9 @@ describe('FeatureFlagGuard', () => {
       mockCacheService.get.mockResolvedValue(false);
       const context = createMockContext({}, {});
 
-      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should coerce string "true" in cache to boolean true', async () => {
@@ -93,7 +95,9 @@ describe('FeatureFlagGuard', () => {
       mockCacheService.get.mockResolvedValue('false');
       const context = createMockContext({}, {});
 
-      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
@@ -115,7 +119,9 @@ describe('FeatureFlagGuard', () => {
       mockConfigService.get.mockReturnValue('false');
       const context = createMockContext({}, {});
 
-      await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
+      await expect(guard.canActivate(context)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should default to true if not defined in cache or config', async () => {
@@ -132,7 +138,9 @@ describe('FeatureFlagGuard', () => {
   describe('Graceful degradation on Redis errors', () => {
     it('should log warning and fallback to config if Redis get throws an error', async () => {
       mockReflector.getAllAndOverride.mockReturnValue('billing');
-      mockCacheService.get.mockRejectedValue(new Error('Redis connection lost'));
+      mockCacheService.get.mockRejectedValue(
+        new Error('Redis connection lost'),
+      );
       mockConfigService.get.mockReturnValue('true');
       const context = createMockContext({}, {});
 

@@ -23,11 +23,13 @@ export class FeatureFlagGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // 1. Resolve feature flag key metadata set by the @FeatureFlag decorator
     const feature = this.reflector.getAllAndOverride<string>(FEATURE_FLAG_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
 
+    // If no flag decorator is present, the route is public/always-enabled
     if (!feature) {
       return true;
     }
@@ -35,43 +37,60 @@ export class FeatureFlagGuard implements CanActivate {
     let isEnabled = true;
     let isEvaluated = false;
 
-    // 1. Check Redis cache first (dynamic override)
+    // 2. CHECK REDIS FIRST (Dynamic Runtime Toggles)
+    // Keys in Redis are stored under "feature_flag:<flag_name>" (e.g., "feature_flag:billing").
+    // This allows administrators/ops to override flags in real-time without redeploying code.
     const cacheKey = `feature_flag:${feature}`;
     try {
-      const cachedValue = await this.cacheService.get<string | number | boolean>(cacheKey);
+      const cachedValue = await this.cacheService.get<
+        string | number | boolean
+      >(cacheKey);
       if (cachedValue !== undefined && cachedValue !== null) {
         isEnabled = this.coerceBoolean(cachedValue);
         isEvaluated = true;
       }
-    } catch (err: any) {
-      // Graceful degradation: Log Redis errors and skip to config fallback
+    } catch (err: unknown) {
+      // RESILIENCE & GRACEFUL DEGRADATION:
+      // If Redis goes down, we must NOT throw a 500 error for all feature-flagged routes.
+      // Instead, log a warning and fallback gracefully to static environment variables.
+      const errorMessage = err instanceof Error ? err.message : String(err);
       this.logger.warn(
-        `Failed to retrieve feature flag '${feature}' from cache. Falling back to environment variables. Error: ${err.message}`,
+        `Failed to retrieve feature flag '${feature}' from cache. Falling back to environment variables. Error: ${errorMessage}`,
       );
     }
 
-    // 2. Fallback to ConfigService (static env variable)
+    // 3. FALLBACK TO STATIC ENVIRONMENT (ConfigService / .env)
+    // If there is no cache override or the cache is unavailable, check env configurations.
+    // Toggles are mapped to "FEATURE_<UPPERCASE_NAME>" (e.g. FEATURE_BILLING).
     if (!isEvaluated) {
       const envKey = `FEATURE_${feature.toUpperCase()}`;
-      const envValue = this.configService.get<string | number | boolean>(envKey);
+      const envValue = this.configService.get<string | number | boolean>(
+        envKey,
+      );
 
       if (envValue !== undefined && envValue !== null) {
         isEnabled = this.coerceBoolean(envValue);
       } else {
-        // Default to true if not defined anywhere
+        // DEFAULT STATE: If the flag is not configured anywhere, default to ENABLED (true).
+        // This avoids forcing developers to seed configurations when deploying new endpoints.
         isEnabled = true;
       }
     }
 
+    // Block access with a 403 Forbidden exception if the feature is disabled
     if (!isEnabled) {
-      throw new ForbiddenException(`Feature '${feature}' is currently disabled.`);
+      throw new ForbiddenException(
+        `Feature '${feature}' is currently disabled.`,
+      );
     }
 
     return true;
   }
 
   /**
-   * Helper to coerce loose value types (strings, numbers) into a boolean.
+   * Helper to coerce loose value types (strings, numbers, booleans) into a boolean.
+   * This is critical because environment files load all parameters as strings ("true"/"false"),
+   * whereas cache engines or JSON requests might send numbers (1/0) or actual booleans.
    */
   private coerceBoolean(value: any): boolean {
     if (typeof value === 'boolean') {

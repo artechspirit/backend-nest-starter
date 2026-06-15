@@ -10,8 +10,17 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
-import { CurrentUser, CurrentUser as CurrentUserType } from '../../common/decorators/current-user.decorator';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { DeviceTokenDto } from './dto/device-token.dto';
 import { NotificationService } from './notification.service';
@@ -43,7 +52,10 @@ export class NotificationController {
   @Post('devices')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Register FCM token for the user device' })
-  @ApiResponse({ status: 200, description: 'Device token registered successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device token registered successfully',
+  })
   async registerDevice(
     @Body() dto: DeviceTokenDto,
     @CurrentUser() user: CurrentUserType,

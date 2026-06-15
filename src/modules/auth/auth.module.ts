@@ -13,7 +13,13 @@ import { MailModule } from '../mail/mail.module';
 @Module({
   imports: [PassportModule, JwtModule.register({}), MailModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy, GithubStrategy, AuthorizationService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    GithubStrategy,
+    AuthorizationService,
+  ],
   exports: [AuthService, AuthorizationService],
 })
 export class AuthModule {}

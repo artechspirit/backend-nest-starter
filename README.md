@@ -41,6 +41,58 @@ A production-ready, highly secure, and modular backend starterkit built on top o
 
 ---
 
+## 📐 Architecture & Diagrams
+
+### 1. Request Lifecycle
+This starterkit handles incoming HTTP requests through a structured pipelines of middleware, guards, interceptors, and pipes:
+
+```mermaid
+graph TD
+    A[Incoming Request] --> B[Express Middleware]
+    B --> C[JwtAuthGuard / ApiKeyGuard]
+    C --> D[PermissionsGuard]
+    D --> E[FeatureFlagGuard]
+    E --> F[ValidationPipe]
+    F --> G[Controller Handler]
+    G --> H[Service Business Logic]
+    H --> I[Prisma Database / Redis Cache]
+    I --> H
+    H --> G
+    G --> J[Response Interceptor]
+    J --> K[Outgoing Response]
+    
+    %% Error handling
+    C -.->|Invalid Auth| L[HttpExceptionFilter]
+    D -.->|Forbidden| L
+    E -.->|Feature Disabled| L
+    F -.->|Validation Fail| L
+    G -.->|Exception Thrown| L
+    H -.->|Exception Thrown| L
+    L --> K
+```
+
+### 2. Database Schema (ERD)
+The relational PostgreSQL database models and their associations configured via Prisma:
+
+```mermaid
+erDiagram
+    User ||--o{ Session : "has"
+    User ||--o{ UserRole : "assigned"
+    User ||--o{ AuditLog : "triggers"
+    User ||--o{ UserOAuth : "linked"
+    User ||--o{ UserDevice : "registers"
+    User ||--o{ Notification : "receives"
+    User ||--o{ Subscription : "owns"
+    User ||--o{ ApiKey : "owns"
+    User ||--o{ FileJob : "creates"
+    Role ||--o{ UserRole : "granted_to"
+    Role ||--o{ RolePermission : "contains"
+    Permission ||--o{ RolePermission : "belongs_to"
+    WebhookSubscription ||--o{ WebhookDeliveryLog : "generates"
+```
+
+---
+
 ## 🛠️ Technology Stack
 
 - **Framework**: [NestJS](https://nestjs.com/) (v11)

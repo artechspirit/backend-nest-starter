@@ -115,7 +115,8 @@ export class AuthController {
 
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    const webUrl = this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
+    const webUrl =
+      this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
     res.redirect(`${webUrl}/oauth/callback?token=${result.accessToken}`);
   }
 
@@ -141,7 +142,8 @@ export class AuthController {
 
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
 
-    const webUrl = this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
+    const webUrl =
+      this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
     res.redirect(`${webUrl}/oauth/callback?token=${result.accessToken}`);
   }
 

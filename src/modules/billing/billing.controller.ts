@@ -8,9 +8,17 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Request } from 'express';
-import { CurrentUser, CurrentUser as CurrentUserType } from '../../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  CurrentUser as CurrentUserType,
+} from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BillingService } from './billing.service';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
@@ -47,11 +55,11 @@ export class BillingController {
     if (!signature) {
       throw new BadRequestException('Stripe signature header is missing');
     }
-    
+
     // Read the raw body preserved by rawBody: true in main.ts
     const rawBody = req.rawBody?.toString('utf8') || '';
     await this.billingService.handleStripeWebhook(signature, rawBody);
-    
+
     return { received: true };
   }
 

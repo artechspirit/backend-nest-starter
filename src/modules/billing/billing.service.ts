@@ -14,7 +14,9 @@ export class BillingService {
   ) {}
 
   private getStripeClient(): any {
-    const secretKey = this.configService.get<string>('billing.stripe.secretKey');
+    const secretKey = this.configService.get<string>(
+      'billing.stripe.secretKey',
+    );
     if (!secretKey) {
       throw new BadRequestException('Stripe secret key is not configured');
     }
@@ -22,8 +24,11 @@ export class BillingService {
   }
 
   private getMidtransSnap(): any {
-    const serverKey = this.configService.get<string>('billing.midtrans.serverKey');
-    const isProduction = this.configService.get<boolean>('billing.midtrans.isProduction') ?? false;
+    const serverKey = this.configService.get<string>(
+      'billing.midtrans.serverKey',
+    );
+    const isProduction =
+      this.configService.get<boolean>('billing.midtrans.isProduction') ?? false;
     if (!serverKey) {
       throw new BadRequestException('Midtrans server key is not configured');
     }
@@ -35,14 +40,19 @@ export class BillingService {
   }
 
   async createCheckoutSession(userId: string, dto: CreateCheckoutDto) {
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
 
     if (dto.provider === 'stripe') {
       const stripe = this.getStripeClient();
-      const webUrl = this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
+      const webUrl =
+        this.configService.get<string>('app.webUrl') ?? 'http://localhost:3000';
 
       // 1. Get or create Stripe Customer
-      let subscription = await this.prisma.subscription.findUnique({ where: { userId } });
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { userId },
+      });
       let customerId = subscription?.stripeCustomerId;
 
       if (!customerId) {
@@ -102,7 +112,7 @@ export class BillingService {
       };
 
       const transaction = await snap.createTransaction(parameter);
-      
+
       return {
         provider: 'midtrans',
         token: transaction.token,
@@ -113,7 +123,9 @@ export class BillingService {
 
   async handleStripeWebhook(signature: string, rawBody: string) {
     const stripe = this.getStripeClient();
-    const webhookSecret = this.configService.get<string>('billing.stripe.webhookSecret');
+    const webhookSecret = this.configService.get<string>(
+      'billing.stripe.webhookSecret',
+    );
 
     if (!webhookSecret) {
       throw new BadRequestException('Stripe webhook secret is not configured');
@@ -124,12 +136,14 @@ export class BillingService {
     try {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     } catch (err: any) {
-      throw new BadRequestException(`Stripe webhook signature verification failed: ${err.message}`);
+      throw new BadRequestException(
+        `Stripe webhook signature verification failed: ${err.message}`,
+      );
     }
 
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as any;
+        const session = event.data.object;
         const userId = session.metadata?.userId;
         const planId = session.metadata?.planId;
 
@@ -152,9 +166,9 @@ export class BillingService {
         break;
       }
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as any;
+        const subscription = event.data.object;
         const customerId = subscription.customer as string;
-        
+
         await this.prisma.subscription.updateMany({
           where: { stripeCustomerId: customerId },
           data: {
@@ -165,7 +179,7 @@ export class BillingService {
         break;
       }
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as any;
+        const subscription = event.data.object;
         const customerId = subscription.customer as string;
 
         await this.prisma.subscription.updateMany({
@@ -182,7 +196,9 @@ export class BillingService {
   }
 
   async handleMidtransWebhook(payload: any) {
-    const serverKey = this.configService.get<string>('billing.midtrans.serverKey');
+    const serverKey = this.configService.get<string>(
+      'billing.midtrans.serverKey',
+    );
     if (!serverKey) {
       throw new BadRequestException('Midtrans is not configured');
     }
@@ -198,7 +214,9 @@ export class BillingService {
 
     // 1. Verify Midtrans signature key
     const hashPayload = order_id + status_code + gross_amount + serverKey;
-    const computedSignature = createHash('sha512').update(hashPayload).digest('hex');
+    const computedSignature = createHash('sha512')
+      .update(hashPayload)
+      .digest('hex');
 
     if (computedSignature !== signature_key) {
       throw new BadRequestException('Midtrans signature verification failed');
@@ -226,7 +244,11 @@ export class BillingService {
       }
     } else if (transaction_status === 'settlement') {
       isPaid = true;
-    } else if (transaction_status === 'cancel' || transaction_status === 'deny' || transaction_status === 'expire') {
+    } else if (
+      transaction_status === 'cancel' ||
+      transaction_status === 'deny' ||
+      transaction_status === 'expire'
+    ) {
       // Payment failed/canceled
     }
 
